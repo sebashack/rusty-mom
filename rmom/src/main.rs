@@ -1,59 +1,77 @@
-use async_broadcast::broadcast;
-use futures_lite::future::block_on;
+use rmom::broadcast::queue::{Message, Queue};
 use std::{thread, time};
+use uuid::Uuid;
 
 fn main() {
+    let mut queue = Queue::new(100);
+
+    let chan1 = queue.duplicate_channel(|msg| println!("Chan1: msgid={}", msg.id.to_string()));
+
     let one_sec = time::Duration::from_millis(1000);
-
-    let (s, r) = broadcast::<String>(100);
-
-    let s1 = s.clone();
-    let s2 = s.clone();
-
-    let mut r1 = r.clone();
-    let mut r2 = r.clone();
+    let three_secs = time::Duration::from_millis(3000);
 
     // Sender 1
-    thread::spawn(move || {
-        let mut i = 0;
-        loop {
-            s1.try_broadcast(format!("S1 = {i}")).unwrap();
-            thread::sleep(one_sec);
-            i += 1;
-        }
+    thread::spawn(move || loop {
+        let msg = Message {
+            id: Uuid::new_v4(),
+            content: Vec::new(),
+            topic: None,
+        };
+
+        chan1.broadcast(msg);
+        thread::sleep(one_sec);
     });
+
+    let chan2 = queue.duplicate_channel(|msg| println!("Chan2: msgid={}", msg.id.to_string()));
+
+    thread::sleep(one_sec);
 
     // Sender 2
-    thread::spawn(move || {
-        let mut i = 1000;
-        loop {
-            s2.try_broadcast(format!("S2 = {i}")).unwrap();
-            thread::sleep(one_sec);
-            i += 1;
-        }
+    thread::spawn(move || loop {
+        let msg = Message {
+            id: Uuid::new_v4(),
+            content: Vec::new(),
+            topic: None,
+        };
+
+        chan2.broadcast(msg);
+        thread::sleep(one_sec);
     });
 
-    thread::spawn(move || {
-        block_on(async {
-            thread::sleep(one_sec);
-            loop {
-                let msg = r1.recv().await.unwrap();
-                println!("R1 <<: {msg}");
-            }
-        });
+    let chan3 = queue.duplicate_channel(|msg| println!("Chan3: msgid={}", msg.id.to_string()));
+    let chan3_id = chan3.id.clone();
+
+    thread::sleep(three_secs);
+
+    // Sender 3
+    thread::spawn(move || loop {
+        let msg = Message {
+            id: Uuid::new_v4(),
+            content: Vec::new(),
+            topic: None,
+        };
+
+        chan3.broadcast(msg);
+        thread::sleep(one_sec);
     });
 
-    thread::spawn(move || {
-        block_on(async {
-            thread::sleep(one_sec);
-            loop {
-                let msg = r2.recv().await.unwrap();
-                println!("R2 <<: {msg}");
-            }
-        });
-    });
+    thread::sleep(three_secs);
+    thread::sleep(three_secs);
+
+    println!("Killing channel 3 receiver ...");
+
+    queue.kill_channel_thread(&chan3_id);
+
+    thread::sleep(three_secs);
+    thread::sleep(three_secs);
+    thread::sleep(three_secs);
+    thread::sleep(three_secs);
+
+    println!("Destroying queue ...");
+    queue.destroy();
 
     loop {
         thread::sleep(one_sec);
+        println!("Doing nothing ...")
     }
 }
