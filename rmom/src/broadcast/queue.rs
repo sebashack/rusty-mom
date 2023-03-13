@@ -34,7 +34,7 @@ impl Queue {
         }
     }
 
-    pub fn duplicate_channel(&mut self, f: impl Fn(Message) + Send + 'static) -> Channel {
+    pub fn duplicate_channel(&mut self, on_message: impl Fn(Message) + Send + 'static) -> Channel {
         let mut receiver = self.r.clone();
         let (send_kill_signal, receive_kill_signal) = mpsc::channel();
 
@@ -45,7 +45,7 @@ impl Queue {
                         break;
                     } else {
                         if let Ok(msg) = receiver.recv().await {
-                            f(msg)
+                            on_message(msg)
                         } else {
                             warn!("Failed to receive message");
                         }
