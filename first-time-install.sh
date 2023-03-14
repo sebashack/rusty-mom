@@ -13,7 +13,8 @@ fi
 
 # Install system deps
 ${SUDO} apt update
-${SUDO} apt-get install -y build-essential curl git libpq-dev lzip openssl pkg-config python3 python3-pip python3-venv tar
+${SUDO} apt-get install -y build-essential curl git libpq-dev lzip openssl pkg-config python3 python3-pip python3-venv \
+                           tar protobuf-compiler libprotobuf-dev
 python3 -m pip install --upgrade pip
 
 curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y

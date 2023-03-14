@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option objc_class_prefix = "MSG";
+
+package messages;
+
+service MessageStream {
+  rpc ConnectToChannel (ConnectionRequest) returns (stream Message) {}
+}
+
+message ConnectionRequest {
+  string queue_label = 1;
+  string channel_id = 2;
+}
+
+message Message {
+  string message_id = 1;
+  bytes content = 2;
+  string topic = 3;
+}

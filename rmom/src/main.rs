@@ -1,77 +1,81 @@
-use rmom::broadcast::queue::{Message, Queue};
-use std::{thread, time};
-use uuid::Uuid;
+//use std::{thread, time};
+//use uuid::Uuid;
 
-fn main() {
-    let mut queue = Queue::new(100);
+//use rmom::broadcast::queue::{Message, Queue};
+use rmom::broadcast::stream_server::run_stream_server;
 
-    let chan1 = queue.duplicate_channel(|msg| println!("Chan1: msgid={}", msg.id.to_string()));
+#[tokio::main]
+async fn main() {
+    run_stream_server().await;
+    //let mut queue = Queue::new(100, "q1".to_string());
 
-    let one_sec = time::Duration::from_millis(1000);
-    let three_secs = time::Duration::from_millis(3000);
+    //let chan1 = queue.duplicate_channel(|msg| println!("Chan1: msgid={}", msg.id.to_string()));
 
-    // Sender 1
-    thread::spawn(move || loop {
-        let msg = Message {
-            id: Uuid::new_v4(),
-            content: Vec::new(),
-            topic: None,
-        };
+    //let one_sec = time::Duration::from_millis(1000);
+    //let three_secs = time::Duration::from_millis(3000);
 
-        chan1.broadcast(msg);
-        thread::sleep(one_sec);
-    });
+    //// Sender 1
+    //thread::spawn(move || loop {
+    //    let msg = Message {
+    //        id: Uuid::new_v4(),
+    //        content: Vec::new(),
+    //        topic: None,
+    //    };
 
-    let chan2 = queue.duplicate_channel(|msg| println!("Chan2: msgid={}", msg.id.to_string()));
+    //    chan1.broadcast(msg);
+    //    thread::sleep(one_sec);
+    //});
 
-    thread::sleep(one_sec);
+    //let chan2 = queue.duplicate_channel(|msg| println!("Chan2: msgid={}", msg.id.to_string()));
 
-    // Sender 2
-    thread::spawn(move || loop {
-        let msg = Message {
-            id: Uuid::new_v4(),
-            content: Vec::new(),
-            topic: None,
-        };
+    //thread::sleep(one_sec);
 
-        chan2.broadcast(msg);
-        thread::sleep(one_sec);
-    });
+    //// Sender 2
+    //thread::spawn(move || loop {
+    //    let msg = Message {
+    //        id: Uuid::new_v4(),
+    //        content: Vec::new(),
+    //        topic: None,
+    //    };
 
-    let chan3 = queue.duplicate_channel(|msg| println!("Chan3: msgid={}", msg.id.to_string()));
-    let chan3_id = chan3.id.clone();
+    //    chan2.broadcast(msg);
+    //    thread::sleep(one_sec);
+    //});
 
-    thread::sleep(three_secs);
+    //let chan3 = queue.duplicate_channel(|msg| println!("Chan3: msgid={}", msg.id.to_string()));
+    //let chan3_id = chan3.id.clone();
 
-    // Sender 3
-    thread::spawn(move || loop {
-        let msg = Message {
-            id: Uuid::new_v4(),
-            content: Vec::new(),
-            topic: None,
-        };
+    //thread::sleep(three_secs);
 
-        chan3.broadcast(msg);
-        thread::sleep(one_sec);
-    });
+    //// Sender 3
+    //thread::spawn(move || loop {
+    //    let msg = Message {
+    //        id: Uuid::new_v4(),
+    //        content: Vec::new(),
+    //        topic: None,
+    //    };
 
-    thread::sleep(three_secs);
-    thread::sleep(three_secs);
+    //    chan3.broadcast(msg);
+    //    thread::sleep(one_sec);
+    //});
 
-    println!("Killing channel 3 receiver ...");
+    //thread::sleep(three_secs);
+    //thread::sleep(three_secs);
 
-    queue.kill_channel_thread(&chan3_id);
+    //println!("Killing channel 3 receiver ...");
 
-    thread::sleep(three_secs);
-    thread::sleep(three_secs);
-    thread::sleep(three_secs);
-    thread::sleep(three_secs);
+    //queue.kill_channel_thread(&chan3_id);
 
-    println!("Destroying queue ...");
-    queue.destroy();
+    //thread::sleep(three_secs);
+    //thread::sleep(three_secs);
+    //thread::sleep(three_secs);
+    //thread::sleep(three_secs);
 
-    loop {
-        thread::sleep(one_sec);
-        println!("Doing nothing ...")
-    }
+    //println!("Destroying queue ...");
+    //queue.destroy();
+
+    //loop {
+    //    thread::sleep(one_sec);
+    //    println!("Doing nothing ...")
+    //}
 }

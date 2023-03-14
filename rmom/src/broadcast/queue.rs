@@ -14,6 +14,7 @@ pub struct Message {
 }
 
 pub struct Queue {
+    label: String,
     w: Sender<Message>,
     r: Receiver<Message>,
     channel_threads: HashMap<Uuid, mpsc::Sender<()>>,
@@ -25,13 +26,18 @@ pub struct Channel {
 }
 
 impl Queue {
-    pub fn new(k: usize) -> Queue {
+    pub fn new(k: usize, label: String) -> Queue {
         let (w, r) = broadcast(k);
         Queue {
+            label,
             w,
             r,
             channel_threads: HashMap::new(),
         }
+    }
+
+    pub fn get_label(&self) -> &str {
+        return self.label.as_str();
     }
 
     pub fn duplicate_channel(&mut self, on_message: impl Fn(Message) + Send + 'static) -> Channel {
