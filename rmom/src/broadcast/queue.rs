@@ -1,99 +1,67 @@
 use async_broadcast::{broadcast, Receiver, Sender};
-use futures_lite::future::block_on;
+use futures_lite::Stream;
 use log::warn;
-use std::collections::HashMap;
-use std::sync::mpsc::{self};
-use std::thread;
 use uuid::Uuid;
 
-#[derive(Clone, Debug)]
-pub struct Message {
-    pub id: Uuid,
-    pub content: Vec<u8>,
-    pub topic: Option<String>,
-}
+use std::pin::Pin;
+use tonic::Status;
+
+use crate::messages::Message;
+
+pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
 pub struct Queue {
     label: String,
-    w: Sender<Message>,
-    r: Receiver<Message>,
-    channel_threads: HashMap<Uuid, mpsc::Sender<()>>,
+    w: Sender<Result<Message, Status>>,
+    r: Receiver<Result<Message, Status>>,
 }
+
+type ChannelReceiver = Receiver<Result<Message, Status>>;
 
 pub struct Channel {
     pub id: Uuid,
-    sender: Sender<Message>,
+    sender: Sender<Result<Message, Status>>,
+    receiver: Option<ChannelReceiver>,
 }
 
 impl Queue {
     pub fn new(k: usize, label: String) -> Queue {
         let (w, r) = broadcast(k);
-        Queue {
-            label,
-            w,
-            r,
-            channel_threads: HashMap::new(),
-        }
+        Queue { label, w, r }
     }
 
     pub fn get_label(&self) -> &str {
         return self.label.as_str();
     }
 
-    pub fn duplicate_channel(&mut self, on_message: impl Fn(Message) + Send + 'static) -> Channel {
-        let mut receiver = self.r.clone();
-        let (send_kill_signal, receive_kill_signal) = mpsc::channel();
-
-        thread::spawn(move || {
-            block_on(async {
-                loop {
-                    if let Ok(()) = receive_kill_signal.try_recv() {
-                        break;
-                    } else {
-                        if let Ok(msg) = receiver.recv().await {
-                            on_message(msg)
-                        } else {
-                            warn!("Failed to receive message");
-                        }
-                    }
-                }
-            });
-        });
-
+    pub fn duplicate_channel(&mut self) -> Channel {
         let chan = Channel {
             id: Uuid::new_v4(),
             sender: self.w.clone(),
+            receiver: Some(self.r.clone()),
         };
 
-        self.channel_threads
-            .insert(chan.id.clone(), send_kill_signal);
-
         chan
-    }
-
-    pub fn kill_channel_thread(&mut self, chan_id: &Uuid) {
-        self.channel_threads.remove(chan_id).map(|kill_sig| {
-            if let Err(_) = kill_sig.send(()) {
-                warn!("Failed to send kill signal to channel thread")
-            }
-        });
     }
 
     pub fn destroy(self) {
         self.w.close();
         self.r.close();
-        for (_, kill_sig) in self.channel_threads {
-            if let Err(_) = kill_sig.send(()) {
-                warn!("Failed to send kill signal to channel thread")
-            }
-        }
     }
 }
 
 impl Channel {
     pub fn broadcast(&self, msg: Message) {
-        if let Err(err) = self.sender.try_broadcast(msg) {
+        if let Err(err) = self.sender.try_broadcast(Ok(msg)) {
             warn!("Failed to broadcast message: {err}");
+        }
+    }
+
+    pub fn get_receiver_stream(&mut self) -> Option<ChannelStream> {
+        if let Some(r) = self.receiver.take() {
+            Some(Box::pin(r))
+        } else {
+            None
         }
     }
 

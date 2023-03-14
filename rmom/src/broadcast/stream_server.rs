@@ -1,26 +1,20 @@
-use futures_lite::Stream;
 use log::info;
 use std::iter;
-use std::{net::ToSocketAddrs, pin::Pin, time::Duration};
+use std::{net::ToSocketAddrs, time::Duration};
 use tokio_stream::StreamExt;
 use tonic::{transport::Server, Request, Response, Status};
 use uuid::Uuid;
 
-use messages::message_stream_server::{MessageStream, MessageStreamServer};
-use messages::{ConnectionRequest, Message};
-
-pub mod messages {
-    tonic::include_proto!("messages");
-}
-
-type ResponseStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
+use super::queue::ChannelStream;
+use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
+use crate::messages::{ConnectionRequest, Message};
 
 #[derive(Debug, Default)]
 pub struct StreamServer {}
 
 #[tonic::async_trait]
 impl MessageStream for StreamServer {
-    type ConnectToChannelStream = ResponseStream;
+    type ConnectToChannelStream = ChannelStream;
 
     async fn connect_to_channel(
         &self,
@@ -30,13 +24,14 @@ impl MessageStream for StreamServer {
         info!("Received request to connect to Channel {0}", req.channel_id);
         let messages = iter::repeat_with(|| {
             return Ok(Message {
-                message_id: Uuid::new_v4().to_string(),
+                id: Uuid::new_v4().to_string(),
                 content: vec![1, 2, 3],
                 topic: "NOTOPIC".to_string(),
             });
         });
 
-        let stream = Box::pin(tokio_stream::iter(messages).throttle(Duration::from_millis(200)));
+        let stream: ChannelStream =
+            Box::pin(tokio_stream::iter(messages).throttle(Duration::from_millis(200)));
 
         Ok(Response::new(stream as Self::ConnectToChannelStream))
     }
