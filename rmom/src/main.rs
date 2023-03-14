@@ -6,7 +6,8 @@ use rmom::broadcast::stream_server::run_stream_server;
 
 #[tokio::main]
 async fn main() {
-    run_stream_server().await;
+    env_logger::init();
+    run_stream_server("127.0.0.1".to_string(), 50051).await;
     //let mut queue = Queue::new(100, "q1".to_string());
 
     //let chan1 = queue.duplicate_channel(|msg| println!("Chan1: msgid={}", msg.id.to_string()));
