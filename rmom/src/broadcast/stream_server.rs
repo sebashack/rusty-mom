@@ -12,35 +12,35 @@ use uuid::Uuid;
 
 use super::queue::{ChannelId, ChannelReceiver};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
-use crate::messages::{ConnectionRequest, Message};
+use crate::messages::{Message, SubscriptionRequest};
 
 #[derive(Default)]
 pub struct StreamServer {
-    channels: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
+    channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
 }
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
 #[tonic::async_trait]
 impl MessageStream for StreamServer {
-    type ConnectToChannelStream = ChannelStream;
+    type SubscribeToChannelStream = ChannelStream;
 
-    async fn connect_to_channel(
+    async fn subscribe_to_channel(
         &self,
-        req: Request<ConnectionRequest>,
-    ) -> Result<Response<Self::ConnectToChannelStream>, Status> {
+        req: Request<SubscriptionRequest>,
+    ) -> Result<Response<Self::SubscribeToChannelStream>, Status> {
         let req = req.into_inner();
         info!("Received request to connect to Channel {0}", req.channel_id);
 
         if let Ok(chan_id) = Uuid::parse_str(req.channel_id.as_str()) {
-            let mut lock = self.channels.lock().unwrap();
+            let mut lock = self.channel_receivers.lock().unwrap();
             let chan_receiver = lock.remove(&chan_id);
             drop(lock);
 
             if let Some(chan_receiver) = chan_receiver {
                 let stream = Box::pin(chan_receiver.receiver);
 
-                Ok(Response::new(stream as Self::ConnectToChannelStream))
+                Ok(Response::new(stream as Self::SubscribeToChannelStream))
             } else {
                 Err(Status::new(Code::NotFound, "Channel not found"))
             }
@@ -55,7 +55,7 @@ impl MessageStream for StreamServer {
 
 pub async fn run_stream_server(host: String, port: u16) {
     let server = StreamServer {
-        channels: Arc::new(Mutex::new(HashMap::new())),
+        channel_receivers: Arc::new(Mutex::new(HashMap::new())),
     };
     let addr = format!("{host}:{port}");
 

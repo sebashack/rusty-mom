@@ -5,10 +5,10 @@ option objc_class_prefix = "MSG";
 package messages;
 
 service MessageStream {
-  rpc ConnectToChannel (ConnectionRequest) returns (stream Message) {}
+  rpc SubscribeToChannel (SubscriptionRequest) returns (stream Message) {}
 }
 
-message ConnectionRequest {
+message SubscriptionRequest {
   string queue_label = 1;
   string channel_id = 2;
 }
