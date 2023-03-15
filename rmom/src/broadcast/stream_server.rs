@@ -1,3 +1,4 @@
+use async_broadcast::Receiver;
 use futures_lite::Stream;
 use log::info;
 use std::collections::HashMap;
@@ -11,13 +12,13 @@ use super::queue::{ChannelId, ChannelReceiver, ChannelSender};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{Message, Push, PushOkResponse, SubscriptionRequest};
 
+pub type ChannelStream = Pin<Box<Receiver<Result<Message, Status>>>>;
+
 #[derive(Default)]
 pub struct StreamServer {
-    channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
+    channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelStream>>>,
     channel_senders: Arc<Mutex<HashMap<ChannelId, ChannelSender>>>,
 }
-
-pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
 #[tonic::async_trait]
 impl MessageStream for StreamServer {
@@ -35,10 +36,8 @@ impl MessageStream for StreamServer {
             let chan_receiver = lock.remove(&chan_id);
             drop(lock);
 
-            if let Some(chan_receiver) = chan_receiver {
-                let stream = Box::pin(chan_receiver.receiver);
-
-                Ok(Response::new(stream as Self::SubscribeToChannelStream))
+            if let Some(stream) = chan_receiver {
+                Ok(Response::new(stream))
             } else {
                 Err(Status::new(Code::NotFound, "Channel not found"))
             }
