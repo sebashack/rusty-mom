@@ -14,7 +14,7 @@ use super::queue::{ChannelId, ChannelReceiver};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{ConnectionRequest, Message};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct StreamServer {
     channels: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
 }
@@ -38,7 +38,7 @@ impl MessageStream for StreamServer {
             drop(lock);
 
             if let Some(chan_receiver) = chan_receiver {
-                let stream = Box::pin(chan_receiver);
+                let stream = Box::pin(chan_receiver.receiver);
 
                 Ok(Response::new(stream as Self::ConnectToChannelStream))
             } else {

@@ -13,12 +13,14 @@ pub struct Queue {
     r: Receiver<Result<Message, Status>>,
 }
 
-pub type ChannelReceiver = Receiver<Result<Message, Status>>;
+pub struct ChannelReceiver {
+    pub id: ChannelId,
+    pub receiver: Receiver<Result<Message, Status>>,
+}
 
-pub struct Channel {
+pub struct ChannelSender {
     pub id: ChannelId,
     sender: Sender<Result<Message, Status>>,
-    //receiver: Option<ChannelReceiver>,
 }
 
 impl Queue {
@@ -31,14 +33,18 @@ impl Queue {
         return self.label.as_str();
     }
 
-    pub fn duplicate_channel(&mut self) -> Channel {
-        let chan = Channel {
+    pub fn duplicate_channel(&mut self) -> (ChannelReceiver, ChannelSender) {
+        let chanSender = ChannelSender {
             id: Uuid::new_v4(),
             sender: self.w.clone(),
-            //receiver: Some(self.r.clone()),
         };
 
-        chan
+        let chanReceiver = ChannelReceiver {
+            id: Uuid::new_v4(),
+            receiver: self.r.clone(),
+        };
+
+        (chanReceiver, chanSender)
     }
 
     pub fn destroy(self) {
@@ -47,7 +53,7 @@ impl Queue {
     }
 }
 
-impl Channel {
+impl ChannelSender {
     pub fn broadcast(&self, msg: Message) {
         if let Err(err) = self.sender.try_broadcast(Ok(msg)) {
             warn!("Failed to broadcast message: {err}");
