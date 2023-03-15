@@ -34,17 +34,17 @@ impl Queue {
     }
 
     pub fn duplicate_channel(&mut self) -> (ChannelReceiver, ChannelSender) {
-        let chanSender = ChannelSender {
+        let chan_sender = ChannelSender {
             id: Uuid::new_v4(),
             sender: self.w.clone(),
         };
 
-        let chanReceiver = ChannelReceiver {
+        let chan_receiver = ChannelReceiver {
             id: Uuid::new_v4(),
             receiver: self.r.clone(),
         };
 
-        (chanReceiver, chanSender)
+        (chan_receiver, chan_sender)
     }
 
     pub fn destroy(self) {
@@ -54,9 +54,12 @@ impl Queue {
 }
 
 impl ChannelSender {
-    pub fn broadcast(&self, msg: Message) {
+    pub fn broadcast(&self, msg: Message) -> Result<(), String> {
         if let Err(err) = self.sender.try_broadcast(Ok(msg)) {
             warn!("Failed to broadcast message: {err}");
+            Err("Broadcast error".to_string())
+        } else {
+            Ok(())
         }
     }
 
