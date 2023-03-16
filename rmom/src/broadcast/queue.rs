@@ -13,9 +13,6 @@ pub struct Queue {
     r: Receiver<Result<Message, Status>>,
 }
 
-// TODO: Implement a Stream instance of ChannelReceiver where we can
-// discard the message if topic does not match:
-// https://github.com/hyperium/tonic/issues/377
 pub struct ChannelReceiver {
     pub id: ChannelId,
     pub topic: Option<String>,

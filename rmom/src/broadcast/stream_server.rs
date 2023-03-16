@@ -1,4 +1,5 @@
 use async_broadcast::Receiver;
+use futures_lite::stream::{Filter, Stream, StreamExt};
 use log::info;
 use std::collections::HashMap;
 use std::net::ToSocketAddrs;
@@ -11,7 +12,7 @@ use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{Message, Push, PushOkResponse, SubscriptionRequest};
 
-pub type ChannelStream = Pin<Box<Receiver<Result<Message, Status>>>>;
+pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
 pub struct StreamServer {
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
@@ -34,8 +35,20 @@ impl MessageStream for StreamServer {
             let chan_receiver = lock.remove(&chan_id);
             drop(lock);
 
-            if let Some(chan_receiver) = chan_receiver {
-                Ok(Response::new(Box::pin(chan_receiver.receiver)))
+            if let Some(mut chan_receiver) = chan_receiver {
+                let stream = chan_receiver.receiver.filter(move |msg| {
+                    if let Some(chan_topic) = &chan_receiver.topic {
+                        if let Ok(msg) = msg {
+                            return chan_topic.as_str() == msg.topic.as_str();
+                        } else {
+                            false
+                        }
+                    } else {
+                        true
+                    }
+                });
+
+                Ok(Response::new(Box::pin(stream)))
             } else {
                 Err(Status::new(Code::NotFound, "Channel not found"))
             }
