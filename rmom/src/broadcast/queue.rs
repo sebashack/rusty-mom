@@ -13,13 +13,16 @@ pub struct Queue {
     r: Receiver<Result<Message, Status>>,
 }
 
+// TODO: Implement a Stream instance of ChannelReceiver where we can
+// discard the message if topic does not match:
+// https://github.com/hyperium/tonic/issues/377
 pub struct ChannelReceiver {
     pub id: ChannelId,
+    pub topic: Option<String>,
     pub receiver: Receiver<Result<Message, Status>>,
 }
 
-pub struct ChannelSender {
-    pub id: ChannelId,
+pub struct BroadcastEnd {
     sender: Sender<Result<Message, Status>>,
 }
 
@@ -33,18 +36,20 @@ impl Queue {
         return self.label.as_str();
     }
 
-    pub fn duplicate_channel(&mut self) -> (ChannelReceiver, ChannelSender) {
-        let chan_sender = ChannelSender {
-            id: Uuid::new_v4(),
-            sender: self.w.clone(),
-        };
-
+    pub fn duplicate_channel(&mut self, topic: Option<String>) -> ChannelReceiver {
         let chan_receiver = ChannelReceiver {
             id: Uuid::new_v4(),
+            topic,
             receiver: self.r.clone(),
         };
 
-        (chan_receiver, chan_sender)
+        chan_receiver
+    }
+
+    pub fn get_broadcast_end(&self) -> BroadcastEnd {
+        BroadcastEnd {
+            sender: self.w.clone(),
+        }
     }
 
     pub fn destroy(self) {
@@ -53,7 +58,7 @@ impl Queue {
     }
 }
 
-impl ChannelSender {
+impl BroadcastEnd {
     pub fn broadcast(&self, msg: Message) -> Result<(), String> {
         if let Err(err) = self.sender.try_broadcast(Ok(msg)) {
             warn!("Failed to broadcast message: {err}");
