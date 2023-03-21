@@ -1,0 +1,4 @@
+.env
+_build
+.flake8
+__pycache__

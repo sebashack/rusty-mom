@@ -1,5 +1,4 @@
-use async_broadcast::Receiver;
-use futures_lite::stream::{Filter, Stream, StreamExt};
+use futures_lite::stream::{Stream, StreamExt};
 use log::info;
 use std::collections::HashMap;
 use std::net::ToSocketAddrs;
@@ -37,7 +36,7 @@ impl MessageStream for StreamServer {
             let chan_receiver = lock.remove(&chan_id);
             drop(lock);
 
-            if let Some(mut chan_receiver) = chan_receiver {
+            if let Some(chan_receiver) = chan_receiver {
                 let stream = chan_receiver.receiver.filter(move |msg| {
                     if let Some(chan_topic) = &chan_receiver.topic {
                         if let Ok(msg) = msg {
