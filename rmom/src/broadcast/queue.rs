@@ -6,9 +6,10 @@ use uuid::Uuid;
 use crate::messages::Message;
 
 pub type ChannelId = Uuid;
+pub type QueueLabel = String;
 
 pub struct Queue {
-    label: String,
+    label: QueueLabel,
     w: Sender<Result<Message, Status>>,
     r: Receiver<Result<Message, Status>>,
 }

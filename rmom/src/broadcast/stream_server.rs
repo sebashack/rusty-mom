@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use tonic::{transport::Server, Code, Request, Response, Status};
 use uuid::Uuid;
 
-use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver};
+use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{Message, Push, PushOkResponse, SubscriptionRequest};
 
@@ -18,7 +18,7 @@ pub struct StreamServer {
     host: String,
     port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
-    broadcast_end: Arc<Mutex<BroadcastEnd>>,
+    broadcast_ends: Arc<Mutex<HashMap<QueueLabel, BroadcastEnd>>>,
 }
 
 #[tonic::async_trait]
@@ -67,31 +67,22 @@ impl MessageStream for StreamServer {
         push: Request<Push>,
     ) -> Result<Response<PushOkResponse>, Status> {
         let push = push.into_inner();
-        info!("Request to PUSH to channel {0}", push.channel_id);
+        info!("Request to PUSH");
 
-        if let Ok(chan_id) = Uuid::parse_str(push.channel_id.as_str()) {
-            let chan_sender = self.broadcast_end.lock().unwrap();
+        let lock = self.broadcast_ends.lock().unwrap();
+        if let Some(broadcast_end) = lock.get(&push.queue_label) {
             let message = Message {
                 id: Uuid::new_v4().to_string(),
                 content: push.content,
                 topic: push.topic,
             };
 
-            match chan_sender.broadcast(message) {
-                Ok(()) => {
-                    drop(chan_sender);
-                    Ok(Response::new(PushOkResponse {}))
-                }
-                Err(msg) => {
-                    drop(chan_sender);
-                    Err(Status::new(Code::Internal, msg))
-                }
+            match broadcast_end.broadcast(message) {
+                Ok(()) => Ok(Response::new(PushOkResponse {})),
+                Err(msg) => Err(Status::new(Code::Internal, msg)),
             }
         } else {
-            Err(Status::new(
-                Code::InvalidArgument,
-                "Invalid channel_id: not a uuid v4",
-            ))
+            Err(Status::new(Code::NotFound, "Queue not found"))
         }
     }
 }
@@ -100,14 +91,14 @@ impl StreamServer {
     pub fn new(
         host: String,
         port: u16,
-        broadcast_end: Arc<Mutex<BroadcastEnd>>,
+        broadcast_ends: Arc<Mutex<HashMap<QueueLabel, BroadcastEnd>>>,
         channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
     ) -> Self {
         StreamServer {
             host,
             port,
             channel_receivers,
-            broadcast_end,
+            broadcast_ends,
         }
     }
 
