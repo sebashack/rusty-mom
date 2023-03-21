@@ -15,6 +15,8 @@ use crate::messages::{Message, Push, PushOkResponse, SubscriptionRequest};
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
 pub struct StreamServer {
+    host: String,
+    port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
     broadcast_end: Arc<Mutex<BroadcastEnd>>,
 }
@@ -94,17 +96,29 @@ impl MessageStream for StreamServer {
     }
 }
 
-pub async fn run_stream_server(host: String, port: u16) {
-    let server = StreamServer {
-        channel_receivers: Arc::new(Mutex::new(HashMap::new())),
-        broadcast_end: Arc::new(Mutex::new(unimplemented!())),
-    };
-    let addr = format!("{host}:{port}");
+impl StreamServer {
+    pub fn new(
+        host: String,
+        port: u16,
+        broadcast_end: Arc<Mutex<BroadcastEnd>>,
+        channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
+    ) -> Self {
+        StreamServer {
+            host,
+            port,
+            channel_receivers,
+            broadcast_end,
+        }
+    }
 
-    println!("Running stream server on {addr}");
-    Server::builder()
-        .add_service(MessageStreamServer::new(server))
-        .serve(addr.to_socket_addrs().unwrap().next().unwrap())
-        .await
-        .unwrap();
+    pub async fn run(self) {
+        let addr = format!("{}:{}", self.host, self.port);
+
+        println!("Running stream server on {addr}");
+        Server::builder()
+            .add_service(MessageStreamServer::new(self))
+            .serve(addr.to_socket_addrs().unwrap().next().unwrap())
+            .await
+            .unwrap();
+    }
 }
