@@ -7,9 +7,11 @@ use std::sync::{Arc, Mutex};
 use tonic::{transport::Server, Code, Request, Response, Status};
 use uuid::Uuid;
 
-use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, QueueLabel};
+use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
-use crate::messages::{Message, Push, PushOkResponse, SubscriptionRequest};
+use crate::messages::{
+    CreateQueueOkResponse, CreateQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest,
+};
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
 
@@ -17,7 +19,7 @@ pub struct StreamServer {
     host: String,
     port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
-    broadcast_ends: Arc<Mutex<HashMap<QueueLabel, BroadcastEnd>>>,
+    broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
 }
 
 #[tonic::async_trait]
@@ -69,7 +71,7 @@ impl MessageStream for StreamServer {
         info!("Request to PUSH");
 
         let lock = self.broadcast_ends.lock().unwrap();
-        if let Some(broadcast_end) = lock.get(&push.queue_label) {
+        if let Some((_, broadcast_end)) = lock.get(&push.queue_label) {
             let message = Message {
                 id: Uuid::new_v4().to_string(),
                 content: push.content,
@@ -84,15 +86,21 @@ impl MessageStream for StreamServer {
             Err(Status::new(Code::NotFound, "Queue not found"))
         }
     }
+
+    async fn create_queue(
+        &self,
+        request: Request<CreateQueueRequest>,
+    ) -> Result<Response<CreateQueueOkResponse>, Status> {
+        // TODO: Finish off implementation
+        unimplemented!()
+    }
 }
 
 impl StreamServer {
-    pub fn new(
-        host: String,
-        port: u16,
-        broadcast_ends: Arc<Mutex<HashMap<QueueLabel, BroadcastEnd>>>,
-        channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
-    ) -> Self {
+    pub fn new(host: String, port: u16) -> Self {
+        let channel_receivers = Arc::new(Mutex::new(HashMap::new()));
+        let broadcast_ends = Arc::new(Mutex::new(HashMap::new()));
+
         StreamServer {
             host,
             port,
