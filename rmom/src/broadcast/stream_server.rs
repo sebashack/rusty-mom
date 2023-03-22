@@ -20,6 +20,7 @@ pub struct StreamServer {
     port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
+    buffer_size: usize,
 }
 
 #[tonic::async_trait]
@@ -91,13 +92,29 @@ impl MessageStream for StreamServer {
         &self,
         request: Request<CreateQueueRequest>,
     ) -> Result<Response<CreateQueueOkResponse>, Status> {
-        // TODO: Finish off implementation
-        unimplemented!()
+        let label = request.into_inner().queue_label;
+        info!("Request to CREATE queue with label: {}", label);
+
+        let mut be_map = self.broadcast_ends.lock().unwrap();
+        
+        if be_map.contains_key(&label){
+            return Err(Status::new(
+                Code::InvalidArgument,
+                "Queue already exists with this label",
+            ))
+        }
+
+        let queue = Queue::new(self.buffer_size, label.clone());
+        let broadcast_end = queue.get_broadcast_end();
+        be_map.insert(label.clone(), (queue, broadcast_end));
+        
+        info!("Queue with label: {} created succesfully", label);
+        Ok(Response::new(CreateQueueOkResponse{}))
     }
 }
 
 impl StreamServer {
-    pub fn new(host: String, port: u16) -> Self {
+    pub fn new(host: String, port: u16, buffer_size: usize) -> Self {
         let channel_receivers = Arc::new(Mutex::new(HashMap::new()));
         let broadcast_ends = Arc::new(Mutex::new(HashMap::new()));
 
@@ -106,6 +123,7 @@ impl StreamServer {
             port,
             channel_receivers,
             broadcast_ends,
+            buffer_size,
         }
     }
 
