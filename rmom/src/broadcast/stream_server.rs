@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
-    CreateQueueOkResponse, CreateQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest,
+    CreateQueueOkResponse, CreateQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest, DeleteQueueOkResponse, DeleteQueueRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -110,6 +110,27 @@ impl MessageStream for StreamServer {
         
         info!("Queue with label: {} created succesfully", label);
         Ok(Response::new(CreateQueueOkResponse{}))
+    }
+
+    async fn delete_queue(
+        &self,
+        request: Request<DeleteQueueRequest>,
+    ) -> Result<Response<DeleteQueueOkResponse>, Status> {
+        let label = request.into_inner().queue_label;
+        info!("Request to DELETE queue with label: {}", label);
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+
+        match broadcast_ends.remove(&label) {
+            Some(_) => {
+                info!("Queue with label: {} deleted succesfully", label);
+                Ok(Response::new(DeleteQueueOkResponse{}))
+            }
+            None => Err(Status::new(
+                Code::InvalidArgument,
+                "Queue not found with the given label",
+            )),
+        }
     }
 }
 
