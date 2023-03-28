@@ -7,9 +7,9 @@ pub struct Client<T> {
 }
 
 impl<T> Client<T> {
-// TODO: Implement
-// new(host, port) -> Client
-// connect(self) -> MessageStreamClient<T>
-// create_queue(self, req: CreateQueueRequest) -> Result<(), String>
-// Make a request in main.rs
+    // TODO: Implement
+    // new(host, port) -> Client
+    // connect(self) -> MessageStreamClient<T>
+    // create_queue(self, req: CreateQueueRequest) -> Result<(), String>
+    // Make a request in main.rs
 }

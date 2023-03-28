@@ -10,7 +10,8 @@ use uuid::Uuid;
 use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
-    CreateQueueOkResponse, CreateQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest, DeleteQueueOkResponse, DeleteQueueRequest,
+    CreateQueueOkResponse, CreateQueueRequest, DeleteQueueOkResponse, DeleteQueueRequest, Message,
+    Push, PushOkResponse, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -96,20 +97,20 @@ impl MessageStream for StreamServer {
         info!("Request to CREATE queue with label: {}", label);
 
         let mut be_map = self.broadcast_ends.lock().unwrap();
-        
-        if be_map.contains_key(&label){
+
+        if be_map.contains_key(&label) {
             return Err(Status::new(
                 Code::InvalidArgument,
                 "Queue already exists with this label",
-            ))
+            ));
         }
 
         let queue = Queue::new(self.buffer_size, label.clone());
         let broadcast_end = queue.get_broadcast_end();
         be_map.insert(label.clone(), (queue, broadcast_end));
-        
+
         info!("Queue with label: {} created succesfully", label);
-        Ok(Response::new(CreateQueueOkResponse{}))
+        Ok(Response::new(CreateQueueOkResponse {}))
     }
 
     async fn delete_queue(
@@ -124,7 +125,7 @@ impl MessageStream for StreamServer {
         match broadcast_ends.remove(&label) {
             Some(_) => {
                 info!("Queue with label: {} deleted succesfully", label);
-                Ok(Response::new(DeleteQueueOkResponse{}))
+                Ok(Response::new(DeleteQueueOkResponse {}))
             }
             None => Err(Status::new(
                 Code::InvalidArgument,
