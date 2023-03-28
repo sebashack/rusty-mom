@@ -96,18 +96,18 @@ impl MessageStream for StreamServer {
         let label = request.into_inner().queue_label;
         info!("Request to CREATE queue with label: {}", label);
 
-        let mut be_map = self.broadcast_ends.lock().unwrap();
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
 
-        if be_map.contains_key(&label) {
+        if broadcast_ends.contains_key(&label) {
             return Err(Status::new(
                 Code::InvalidArgument,
-                "Queue already exists with this label",
+                "Queue already exists",
             ));
         }
 
         let queue = Queue::new(self.buffer_size, label.clone());
         let broadcast_end = queue.get_broadcast_end();
-        be_map.insert(label.clone(), (queue, broadcast_end));
+        broadcast_ends.insert(label.clone(), (queue, broadcast_end));
 
         info!("Queue with label: {} created succesfully", label);
         Ok(Response::new(CreateQueueOkResponse {}))
