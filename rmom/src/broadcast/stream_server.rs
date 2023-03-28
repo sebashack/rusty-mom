@@ -77,7 +77,7 @@ impl MessageStream for StreamServer {
             let message = Message {
                 id: Uuid::new_v4().to_string(),
                 content: push.content,
-                topic: push.topic,
+                topic: push.topic.to_lowercase(),
             };
 
             match broadcast_end.broadcast(message) {
@@ -93,7 +93,7 @@ impl MessageStream for StreamServer {
         &self,
         request: Request<CreateQueueRequest>,
     ) -> Result<Response<CreateQueueOkResponse>, Status> {
-        let label = request.into_inner().queue_label;
+        let label = request.into_inner().queue_label.to_lowercase();
         info!("Request to CREATE queue with label: {}", label);
 
         let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
@@ -114,7 +114,7 @@ impl MessageStream for StreamServer {
         &self,
         request: Request<DeleteQueueRequest>,
     ) -> Result<Response<DeleteQueueOkResponse>, Status> {
-        let label = request.into_inner().queue_label;
+        let label = request.into_inner().queue_label.to_lowercase();
         info!("Request to DELETE queue with label: {}", label);
 
         let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
@@ -132,14 +132,26 @@ impl MessageStream for StreamServer {
         &self,
         request: Request<CreateChannelRequest>,
     ) -> Result<Response<CreateChannelResponse>, Status> {
-        let label = request.into_inner().queue_label;
-        info!("Request to CREATE channel on queue: {}", label);
+        let request = request.into_inner();
+        let label = request.queue_label;
+        let topic = request.topic.to_lowercase();
+
+        info!(
+            "Request to CREATE channel with topic {} on queue: {}",
+            topic, label
+        );
+
+        let maybe_topic = if topic == "__none__" {
+            None
+        } else {
+            Some(topic)
+        };
 
         let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
 
         match broadcast_ends.get_mut(&label) {
             Some((queue, _)) => {
-                let channel = queue.duplicate_channel(Some(label));
+                let channel = queue.duplicate_channel(maybe_topic);
                 let mut lock = self.channel_receivers.lock().unwrap();
                 let channel_id = channel.id.clone();
                 lock.insert(channel_id.clone(), channel);
