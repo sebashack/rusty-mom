@@ -1,0 +1,10 @@
+[default]
+address = "127.0.0.1"
+port = 8082
+workers = 5
+max_blocking = 512
+keep_alive = 5
+
+[release]
+port = 8080
+workers = 20

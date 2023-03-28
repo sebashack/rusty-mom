@@ -8,9 +8,9 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn connect(&self, host: String, port: u16) -> Self {
-        println!("Connecting to host on {host}:{port}");
-        let addr = format!("{}:{}", host, port);
+    pub async fn connect(host: String, port: u16) -> Self {
+        println!("Connecting to host on http://{host}:{port}");
+        let addr = format!("http://{}:{}", host, port);
 
         Client {
             connection: MessageStreamClient::connect(addr).await.unwrap(),
