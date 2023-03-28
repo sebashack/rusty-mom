@@ -1,5 +1,10 @@
+use futures::lock::Mutex;
 use rocket::http::Status;
 use rocket::{Build, Request, Rocket};
+use std::sync::Arc;
+
+use super::endpoints::{endpoints, AvailableClients};
+use crate::client::endpoints::Client;
 
 #[get("/status")]
 pub async fn status() -> &'static str {
@@ -36,16 +41,22 @@ fn default(status: Status, req: &Request) -> String {
     format!("Unknown error: {} ({})", status, req.uri())
 }
 
-pub fn build_server() -> Rocket<Build> {
-    rocket::build().mount("/", routes![status]).register(
-        "/",
-        catchers![
-            internal_error,
-            forbidden,
-            unauthorized,
-            not_found,
-            bad_request,
-            default
-        ],
-    )
+pub async fn build_server(host: String, port: u16) -> Rocket<Build> {
+    let clients = Arc::new(Mutex::new(Client::connect(host, port).await));
+
+    rocket::build()
+        .manage(AvailableClients { clients })
+        .mount("/", routes![status])
+        .mount("/", endpoints())
+        .register(
+            "/",
+            catchers![
+                internal_error,
+                forbidden,
+                unauthorized,
+                not_found,
+                bad_request,
+                default
+            ],
+        )
 }
