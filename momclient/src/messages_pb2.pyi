@@ -12,7 +12,12 @@ class Message(_message.Message):
     content: bytes
     id: str
     topic: str
-    def __init__(self, id: _Optional[str] = ..., content: _Optional[bytes] = ..., topic: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        id: _Optional[str] = ...,
+        content: _Optional[bytes] = ...,
+        topic: _Optional[str] = ...,
+    ) -> None: ...
 
 class Push(_message.Message):
     __slots__ = ["content", "queue_label", "topic"]
@@ -22,7 +27,12 @@ class Push(_message.Message):
     content: bytes
     queue_label: str
     topic: str
-    def __init__(self, content: _Optional[bytes] = ..., topic: _Optional[str] = ..., queue_label: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        content: _Optional[bytes] = ...,
+        topic: _Optional[str] = ...,
+        queue_label: _Optional[str] = ...,
+    ) -> None: ...
 
 class PushOkResponse(_message.Message):
     __slots__ = []
