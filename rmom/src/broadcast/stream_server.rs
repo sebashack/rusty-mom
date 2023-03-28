@@ -10,7 +10,8 @@ use uuid::Uuid;
 use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
-    CreateQueueOkResponse, CreateQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest,
+    CreateQueueOkResponse, CreateQueueRequest, DeleteQueueOkResponse, DeleteQueueRequest, Message,
+    Push, PushOkResponse, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -20,6 +21,7 @@ pub struct StreamServer {
     port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
+    buffer_size: usize,
 }
 
 #[tonic::async_trait]
@@ -91,13 +93,47 @@ impl MessageStream for StreamServer {
         &self,
         request: Request<CreateQueueRequest>,
     ) -> Result<Response<CreateQueueOkResponse>, Status> {
-        // TODO: Finish off implementation
-        unimplemented!()
+        let label = request.into_inner().queue_label;
+        info!("Request to CREATE queue with label: {}", label);
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+
+        if broadcast_ends.contains_key(&label) {
+            Err(Status::new(Code::InvalidArgument, "Queue already exists"))
+        } else {
+            let queue = Queue::new(self.buffer_size, label.clone());
+            let broadcast_end = queue.get_broadcast_end();
+            broadcast_ends.insert(label.clone(), (queue, broadcast_end));
+
+            info!("Queue with label: {} created succesfully", label);
+            Ok(Response::new(CreateQueueOkResponse {}))
+        }
+    }
+
+    async fn delete_queue(
+        &self,
+        request: Request<DeleteQueueRequest>,
+    ) -> Result<Response<DeleteQueueOkResponse>, Status> {
+        let label = request.into_inner().queue_label;
+        info!("Request to DELETE queue with label: {}", label);
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+
+        match broadcast_ends.remove(&label) {
+            Some(_) => {
+                info!("Queue with label: {} deleted succesfully", label);
+                Ok(Response::new(DeleteQueueOkResponse {}))
+            }
+            None => Err(Status::new(
+                Code::InvalidArgument,
+                "Queue not found",
+            )),
+        }
     }
 }
 
 impl StreamServer {
-    pub fn new(host: String, port: u16) -> Self {
+    pub fn new(host: String, port: u16, buffer_size: usize) -> Self {
         let channel_receivers = Arc::new(Mutex::new(HashMap::new()));
         let broadcast_ends = Arc::new(Mutex::new(HashMap::new()));
 
@@ -106,6 +142,7 @@ impl StreamServer {
             port,
             channel_receivers,
             broadcast_ends,
+            buffer_size,
         }
     }
 
