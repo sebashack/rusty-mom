@@ -99,18 +99,15 @@ impl MessageStream for StreamServer {
         let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
 
         if broadcast_ends.contains_key(&label) {
-            return Err(Status::new(
-                Code::InvalidArgument,
-                "Queue already exists",
-            ));
+            Err(Status::new(Code::InvalidArgument, "Queue already exists"))
+        } else {
+            let queue = Queue::new(self.buffer_size, label.clone());
+            let broadcast_end = queue.get_broadcast_end();
+            broadcast_ends.insert(label.clone(), (queue, broadcast_end));
+
+            info!("Queue with label: {} created succesfully", label);
+            Ok(Response::new(CreateQueueOkResponse {}))
         }
-
-        let queue = Queue::new(self.buffer_size, label.clone());
-        let broadcast_end = queue.get_broadcast_end();
-        broadcast_ends.insert(label.clone(), (queue, broadcast_end));
-
-        info!("Queue with label: {} created succesfully", label);
-        Ok(Response::new(CreateQueueOkResponse {}))
     }
 
     async fn delete_queue(
