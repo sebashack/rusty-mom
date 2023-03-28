@@ -10,8 +10,8 @@ use uuid::Uuid;
 use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
-    CreateQueueOkResponse, CreateQueueRequest, DeleteQueueOkResponse, DeleteQueueRequest, Message,
-    Push, PushOkResponse, SubscriptionRequest,
+    CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
+    DeleteQueueOkResponse, DeleteQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -124,10 +124,32 @@ impl MessageStream for StreamServer {
                 info!("Queue with label: {} deleted succesfully", label);
                 Ok(Response::new(DeleteQueueOkResponse {}))
             }
-            None => Err(Status::new(
-                Code::InvalidArgument,
-                "Queue not found",
-            )),
+            None => Err(Status::new(Code::InvalidArgument, "Queue not found")),
+        }
+    }
+
+    async fn create_channel(
+        &self,
+        request: Request<CreateChannelRequest>,
+    ) -> Result<Response<CreateChannelResponse>, Status> {
+        let label = request.into_inner().queue_label;
+        info!("Request to CREATE channel on queue: {}", label);
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+
+        match broadcast_ends.get_mut(&label) {
+            Some((queue, _)) => {
+                let channel = queue.duplicate_channel(Some(label));
+                let mut lock = self.channel_receivers.lock().unwrap();
+                let channel_id = channel.id.clone();
+                lock.insert(channel_id.clone(), channel);
+                info!("Channel {} created successfully", channel_id);
+
+                Ok(Response::new(CreateChannelResponse {
+                    channel_id: channel_id.to_string(),
+                }))
+            }
+            None => Err(Status::new(Code::InvalidArgument, "Queue not found")),
         }
     }
 }

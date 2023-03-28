@@ -9,6 +9,7 @@ service MessageStream {
   rpc PushToChannel (Push) returns (PushOkResponse) {}
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueOkResponse) {}
   rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueOkResponse) {}
+  rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}
 }
 
 message SubscriptionRequest {
@@ -33,10 +34,19 @@ message CreateQueueRequest {
   string queue_label = 1;
 }
 
+message CreateQueueOkResponse {}
+
 message DeleteQueueRequest {
   string queue_label = 1;
 }
 
-message CreateQueueOkResponse {}
-
 message DeleteQueueOkResponse {}
+
+message CreateChannelRequest {
+  string queue_label = 1;
+  string topic = 2;
+}
+
+message CreateChannelResponse {
+  string channel_id = 1;
+}
