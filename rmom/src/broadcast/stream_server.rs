@@ -126,7 +126,7 @@ impl MessageStream for StreamServer {
             }
             None => Err(Status::new(
                 Code::InvalidArgument,
-                "Queue not found with the given label",
+                "Queue not found",
             )),
         }
     }
