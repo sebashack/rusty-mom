@@ -1,6 +1,7 @@
 from collections import namedtuple
 import json
 import requests
+import asyncio
 
 import grpc
 import messages_pb2
@@ -40,10 +41,6 @@ class MoMClient:
 
         return ChannelInfo(data["host"], data["port"], data["id"])
 
-    @staticmethod
-    def get_pusher(chan_info):
-        return Pusher(chan_info)
-
     # Helpers
     def root(self):
         return f"http://{self._http_host}:{self._http_port}"
@@ -65,3 +62,29 @@ class Pusher:
 
     def close(self):
         self._grpc_channel.close()
+
+
+class Subscriber:
+    _chan_info = None
+
+    def __init__(self, chan_info):
+        self._chan_info = chan_info
+
+    def consume(self):
+        async def run():
+            async with grpc.aio.insecure_channel(
+                f"{self._chan_info.host}:{self._chan_info.port}"
+            ) as channel:
+                stub = messages_pb2_grpc.MessageStreamStub(channel)
+
+                message_stream = stub.SubscribeToChannel(
+                    messages_pb2.SubscriptionRequest(channel_id=self._chan_info.id)
+                )
+                while True:
+                    res = await message_stream.read()
+                    if res == grpc.aio.EOF:
+                        break
+                    content = res.content.decode("utf-8")
+                    print(f"{(res.id, res.topic)}: {content}")
+
+        asyncio.run(run())

@@ -26,7 +26,9 @@ pub struct BroadcastEnd {
 
 impl Queue {
     pub fn new(k: usize, label: String) -> Queue {
-        let (w, r) = broadcast(k);
+        let (w, mut r) = broadcast(k);
+        r.set_overflow(true);
+
         Queue { label, w, r }
     }
 
@@ -35,11 +37,15 @@ impl Queue {
     }
 
     pub fn duplicate_channel(&mut self, topic: Option<String>) -> ChannelReceiver {
+        let mut receiver = self.r.clone();
+        receiver.set_overflow(true);
+
         let chan_receiver = ChannelReceiver {
             id: Uuid::new_v4(),
             topic,
-            receiver: self.r.clone(),
+            receiver: receiver,
         };
+
 
         chan_receiver
     }

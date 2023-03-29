@@ -56,7 +56,7 @@ async fn put_channel(
     let mut client = state.clients.lock().await;
     let response = client.create_channel(label, topic).await;
 
-    // TODO: Unharcode host and port when we keep track of
+    // TODO: Unhardcode host and port when we keep track of
     // available clients.
     match response {
         Ok(channel_id) => Ok(Json(ChannelInfo {
