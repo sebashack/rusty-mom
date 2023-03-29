@@ -29,10 +29,21 @@ from momlib import MoMClient
 def main():
     mom_client = MoMClient("127.0.0.1", 8082)
     mom_client.create_queue("qa")
-    mom_client.delete_queue("qa")
-    mom_client.create_queue("qa")
-    mom_client.create_channel("qa")
-    mom_client.create_channel("qa", "t1")
+    chan1Info = mom_client.create_channel("qa")
+    pusher1 = MoMClient.get_pusher(chan1Info)
+
+    pusher1.push(b"Hello!", "qa")
+    pusher1.push(b"Hello!", "qa")
+    pusher1.push(b"Hello!", "qa")
+    pusher1.push(b"Hello!", "qa")
+    pusher1.push(b"Hello!", "qa")
+
+    pusher1.close()
+
+    # mom_client.delete_queue("qa")
+    # mom_client.create_queue("qa")
+    # mom_client.create_channel("qa")
+    # mom_client.create_channel("qa", "t1")
 
 
 if __name__ == "__main__":

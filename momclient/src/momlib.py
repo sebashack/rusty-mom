@@ -1,5 +1,13 @@
+from collections import namedtuple
 import json
 import requests
+
+import grpc
+import messages_pb2
+import messages_pb2_grpc
+
+
+ChannelInfo = namedtuple("ChannelInfo", ["host", "port", "id"])
 
 
 class MoMClient:
@@ -30,7 +38,30 @@ class MoMClient:
         print(f"Response Status: {response.status_code}")
         print(f"Response body: {data}")
 
-        return data
+        return ChannelInfo(data["host"], data["port"], data["id"])
 
+    @staticmethod
+    def get_pusher(chan_info):
+        return Pusher(chan_info)
+
+    # Helpers
     def root(self):
         return f"http://{self._http_host}:{self._http_port}"
+
+
+class Pusher:
+    _pusher = None
+    _grpc_channel = None
+
+    def __init__(self, chan_info):
+        self._grpc_channel = grpc.insecure_channel(f"{chan_info.host}:{chan_info.port}")
+        self._pusher = messages_pb2_grpc.MessageStreamStub(self._grpc_channel)
+
+    def push(self, content, queue_label, topic="__none__"):
+        self._pusher.PushToQueue(
+            messages_pb2.Push(content=content, topic=topic, queue_label=queue_label)
+        )
+        print("Message pushed...")
+
+    def close(self):
+        self._grpc_channel.close()

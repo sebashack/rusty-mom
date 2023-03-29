@@ -6,7 +6,7 @@ package messages;
 
 service MessageStream {
   rpc SubscribeToChannel (SubscriptionRequest) returns (stream Message) {}
-  rpc PushToChannel (Push) returns (PushOkResponse) {}
+  rpc PushToQueue (Push) returns (PushOkResponse) {}
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueOkResponse) {}
   rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueOkResponse) {}
   rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}

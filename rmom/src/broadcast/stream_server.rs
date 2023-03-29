@@ -65,7 +65,7 @@ impl MessageStream for StreamServer {
         }
     }
 
-    async fn push_to_channel(
+    async fn push_to_queue(
         &self,
         push: Request<Push>,
     ) -> Result<Response<PushOkResponse>, Status> {
