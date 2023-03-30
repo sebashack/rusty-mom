@@ -8,7 +8,8 @@ import messages_pb2
 import messages_pb2_grpc
 
 
-ChannelInfo = namedtuple("ChannelInfo", ["host", "port", "id"])
+MoMInfo = namedtuple("MoMInfo", ["host", "port"])
+Channel = namedtuple("Channel", ["id"])
 
 
 class MoMClient:
@@ -38,8 +39,7 @@ class MoMClient:
 
         print(f"Response Status: {response.status_code}")
         print(f"Response body: {data}")
-
-        return ChannelInfo(data["host"], data["port"], data["id"])
+        return (MoMInfo(data["host"], data["port"]), Channel(data["id"]))
 
     # Helpers
     def root(self):
@@ -50,8 +50,8 @@ class Pusher:
     _pusher = None
     _grpc_channel = None
 
-    def __init__(self, chan_info):
-        self._grpc_channel = grpc.insecure_channel(f"{chan_info.host}:{chan_info.port}")
+    def __init__(self, mom_info):
+        self._grpc_channel = grpc.insecure_channel(f"{mom_info.host}:{mom_info.port}")
         self._pusher = messages_pb2_grpc.MessageStreamStub(self._grpc_channel)
 
     def push(self, content, queue_label, topic="__none__"):
@@ -65,20 +65,22 @@ class Pusher:
 
 
 class Subscriber:
-    _chan_info = None
+    _mom_info = None
+    _channel_id = None
 
-    def __init__(self, chan_info):
-        self._chan_info = chan_info
+    def __init__(self, mom_info, channel):
+        self._mom_info = mom_info
+        self._channel_id = channel.id
 
     def consume(self):
         async def run():
             async with grpc.aio.insecure_channel(
-                f"{self._chan_info.host}:{self._chan_info.port}"
+                f"{self._mom_info.host}:{self._mom_info.port}"
             ) as channel:
                 stub = messages_pb2_grpc.MessageStreamStub(channel)
 
                 message_stream = stub.SubscribeToChannel(
-                    messages_pb2.SubscriptionRequest(channel_id=self._chan_info.id)
+                    messages_pb2.SubscriptionRequest(channel_id=self._channel_id)
                 )
                 while True:
                     res = await message_stream.read()

@@ -13,7 +13,7 @@ pub struct AvailableClients {
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
-pub struct ChannelInfo {
+pub struct ConnectionInfo {
     pub id: String,
     pub host: String,
     pub port: u16,
@@ -52,14 +52,14 @@ async fn put_channel(
     state: &State<AvailableClients>,
     label: String,
     topic: String,
-) -> Result<Json<ChannelInfo>, (Status, String)> {
+) -> Result<Json<ConnectionInfo>, (Status, String)> {
     let mut client = state.clients.lock().await;
     let response = client.create_channel(label, topic).await;
 
     // TODO: Unhardcode host and port when we keep track of
     // available clients.
     match response {
-        Ok(channel_id) => Ok(Json(ChannelInfo {
+        Ok(channel_id) => Ok(Json(ConnectionInfo {
             id: channel_id,
             host: "127.0.0.1".to_string(),
             port: 50051,

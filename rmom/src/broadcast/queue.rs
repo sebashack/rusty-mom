@@ -46,7 +46,6 @@ impl Queue {
             receiver: receiver,
         };
 
-
         chan_receiver
     }
 

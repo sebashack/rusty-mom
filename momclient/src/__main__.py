@@ -7,11 +7,11 @@ from momlib import MoMClient, Pusher, Subscriber
 def main():
     mom_client = MoMClient("127.0.0.1", 8082)
     mom_client.create_queue("qa")
-    chan1_info = mom_client.create_channel("qa")
-    chan2_info = mom_client.create_channel("qa")
+    mom_info1, channel1 = mom_client.create_channel("qa")
+    mom_info2, channel2 = mom_client.create_channel("qa")
 
     def constant_push():
-        pusher1 = Pusher(chan1_info)
+        pusher1 = Pusher(mom_info1)
         while True:
             pusher1.push(b"Hello!", "qa")
             time.sleep(1)
@@ -20,7 +20,7 @@ def main():
     push_thread.start()
 
     def consumer1():
-        subscriber = Subscriber(chan1_info)
+        subscriber = Subscriber(mom_info1, channel1)
         subscriber.consume()
 
     consumer1_thread = threading.Thread(target=consumer1)
