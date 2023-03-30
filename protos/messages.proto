@@ -10,6 +10,8 @@ service MessageStream {
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueOkResponse) {}
   rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueOkResponse) {}
   rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}
+  rpc ListQueues (ListQueuesRequest) returns (ListQueuesResponse) {}
+  rpc ListChannels (ListChannelsRequest) returns (ListChannelsResponse) {}
 }
 
 message SubscriptionRequest {
@@ -49,4 +51,16 @@ message CreateChannelRequest {
 
 message CreateChannelResponse {
   string channel_id = 1;
+}
+
+message ListQueuesRequest {}
+
+message ListQueuesResponse {
+  repeated string queues = 1;
+}
+
+message ListChannelsRequest {}
+
+message ListChannelsResponse {
+  repeated string channels = 1;
 }
