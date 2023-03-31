@@ -33,18 +33,18 @@ impl Client {
         }
     }
 
-    pub async fn list_queues(&mut self) -> Result<(), String> {
+    pub async fn list_queues(&mut self) -> Result<Vec<String>, String> {
         let req = tonic::Request::new(ListQueuesRequest {});
         match self.connection.list_queues(req).await {
-            Ok(_) => Ok(()),
-            Err(err) => Err(format!("Failed to list queues: {}", err)),
+            Ok(queues) => Ok(queues.get_ref().queues.clone()),
+            Err(err) => Err(format!("Failed to list channels: {}", err)),
         }
     }
 
-    pub async fn list_channels(&mut self) -> Result<(), String> {
+    pub async fn list_channels(&mut self) -> Result<Vec<String>, String> {
         let req = tonic::Request::new(ListChannelsRequest {});
         match self.connection.list_channels(req).await {
-            Ok(_) => Ok(()),
+            Ok(channels) => Ok(channels.get_ref().channels.clone()),
             Err(err) => Err(format!("Failed to list channels: {}", err)),
         }
     }
