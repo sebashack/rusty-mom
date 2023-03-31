@@ -95,5 +95,5 @@ async fn put_channel(
 }
 
 pub fn endpoints() -> Vec<Route> {
-    routes![post_queue, delete_queue, put_channel]
+    routes![post_queue, delete_queue, put_channel, list_queues, list_channels]
 }
