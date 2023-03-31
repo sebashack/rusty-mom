@@ -39,15 +39,10 @@ class MessageStreamStub(object):
                 request_serializer=messages__pb2.CreateChannelRequest.SerializeToString,
                 response_deserializer=messages__pb2.CreateChannelResponse.FromString,
                 )
-        self.ListQueues = channel.unary_unary(
-                '/messages.MessageStream/ListQueues',
-                request_serializer=messages__pb2.ListQueuesRequest.SerializeToString,
-                response_deserializer=messages__pb2.ListQueuesResponse.FromString,
-                )
-        self.ListChannels = channel.unary_unary(
-                '/messages.MessageStream/ListChannels',
-                request_serializer=messages__pb2.ListChannelsRequest.SerializeToString,
-                response_deserializer=messages__pb2.ListChannelsResponse.FromString,
+        self.DeleteChannel = channel.unary_unary(
+                '/messages.MessageStream/DeleteChannel',
+                request_serializer=messages__pb2.DeleteChannelRequest.SerializeToString,
+                response_deserializer=messages__pb2.DeleteChannelOkResponse.FromString,
                 )
 
 
@@ -84,13 +79,7 @@ class MessageStreamServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ListQueues(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ListChannels(self, request, context):
+    def DeleteChannel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -124,15 +113,10 @@ def add_MessageStreamServicer_to_server(servicer, server):
                     request_deserializer=messages__pb2.CreateChannelRequest.FromString,
                     response_serializer=messages__pb2.CreateChannelResponse.SerializeToString,
             ),
-            'ListQueues': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListQueues,
-                    request_deserializer=messages__pb2.ListQueuesRequest.FromString,
-                    response_serializer=messages__pb2.ListQueuesResponse.SerializeToString,
-            ),
-            'ListChannels': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListChannels,
-                    request_deserializer=messages__pb2.ListChannelsRequest.FromString,
-                    response_serializer=messages__pb2.ListChannelsResponse.SerializeToString,
+            'DeleteChannel': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteChannel,
+                    request_deserializer=messages__pb2.DeleteChannelRequest.FromString,
+                    response_serializer=messages__pb2.DeleteChannelOkResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -230,7 +214,7 @@ class MessageStream(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ListQueues(request,
+    def DeleteChannel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -240,25 +224,8 @@ class MessageStream(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/ListQueues',
-            messages__pb2.ListQueuesRequest.SerializeToString,
-            messages__pb2.ListQueuesResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ListChannels(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/ListChannels',
-            messages__pb2.ListChannelsRequest.SerializeToString,
-            messages__pb2.ListChannelsResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/DeleteChannel',
+            messages__pb2.DeleteChannelRequest.SerializeToString,
+            messages__pb2.DeleteChannelOkResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

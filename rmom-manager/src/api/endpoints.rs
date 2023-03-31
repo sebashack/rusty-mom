@@ -69,6 +69,17 @@ async fn get_channels(
 
     match response {
         Ok(queues) => Ok(Json(queues)),
+
+#[delete("/channels/<channel_id>")]
+async fn delete_channel(
+    state: &State<AvailableClients>,
+    channel_id: String,
+) -> Result<(), (Status, String)> {
+    let mut client = state.clients.lock().await;
+    let response = client.delete_channel(channel_id).await;
+
+    match response {
+        Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
     }
 }
@@ -100,6 +111,7 @@ pub fn endpoints() -> Vec<Route> {
         delete_queue,
         put_channel,
         get_queues,
-        get_channels
+        get_channels,
+        delete_channel
     ]
 }

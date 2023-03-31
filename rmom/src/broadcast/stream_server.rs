@@ -13,6 +13,7 @@ use crate::messages::{
     CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
     DeleteQueueOkResponse, DeleteQueueRequest, ListChannelsRequest, ListChannelsResponse,
     ListQueuesRequest, ListQueuesResponse, Message, Push, PushOkResponse, SubscriptionRequest,
+    DeleteChannelOkResponse, DeleteChannelRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -123,6 +124,29 @@ impl MessageStream for StreamServer {
                 Ok(Response::new(DeleteQueueOkResponse {}))
             }
             None => Err(Status::new(Code::InvalidArgument, "Queue not found")),
+        }
+    }
+
+    async fn delete_channel(
+        &self,
+        request: Request<DeleteChannelRequest>,
+    ) -> Result<Response<DeleteChannelOkResponse>, Status> {
+
+        let channel_id = Uuid::parse_str(request.into_inner().channel_id.as_str());
+        match channel_id {
+            Ok(id) => {
+                info!("Request to DELETE channel with id: {}", id);
+                let mut channel_receivers = self.channel_receivers.lock().unwrap();
+
+                match channel_receivers.remove(&id) {
+                    Some(_) => {
+                        info!("Channel with id: {} deleted succesfully", id);
+                        Ok(Response::new(DeleteChannelOkResponse {}))
+                    }
+                    None => Err(Status::new(Code::InvalidArgument, "Channel not found")),
+                }
+            },
+            Err(_) => Err(Status::new(Code::InvalidArgument, "Invalid channel_id: not a uuid v4")),
         }
     }
 
