@@ -1,6 +1,7 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -37,6 +38,26 @@ class DeleteQueueRequest(_message.Message):
     QUEUE_LABEL_FIELD_NUMBER: _ClassVar[int]
     queue_label: str
     def __init__(self, queue_label: _Optional[str] = ...) -> None: ...
+
+class ListChannelsRequest(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class ListChannelsResponse(_message.Message):
+    __slots__ = ["channels"]
+    CHANNELS_FIELD_NUMBER: _ClassVar[int]
+    channels: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, channels: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class ListQueuesRequest(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class ListQueuesResponse(_message.Message):
+    __slots__ = ["queues"]
+    QUEUES_FIELD_NUMBER: _ClassVar[int]
+    queues: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, queues: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class Message(_message.Message):
     __slots__ = ["content", "id", "topic"]

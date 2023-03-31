@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0emessages.proto\x12\x08messages\")\n\x13SubscriptionRequest\x12\x12\n\nchannel_id\x18\x01 \x01(\t\"5\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\x12\r\n\x05topic\x18\x03 \x01(\t\";\n\x04Push\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\x0c\x12\r\n\x05topic\x18\x02 \x01(\t\x12\x13\n\x0bqueue_label\x18\x03 \x01(\t\"\x10\n\x0ePushOkResponse\")\n\x12\x43reateQueueRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\"\x17\n\x15\x43reateQueueOkResponse\")\n\x12\x44\x65leteQueueRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\"\x17\n\x15\x44\x65leteQueueOkResponse\":\n\x14\x43reateChannelRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\x12\r\n\x05topic\x18\x02 \x01(\t\"+\n\x15\x43reateChannelResponse\x12\x12\n\nchannel_id\x18\x01 \x01(\t2\x8a\x03\n\rMessageStream\x12J\n\x12SubscribeToChannel\x12\x1d.messages.SubscriptionRequest\x1a\x11.messages.Message\"\x00\x30\x01\x12\x39\n\x0bPushToQueue\x12\x0e.messages.Push\x1a\x18.messages.PushOkResponse\"\x00\x12N\n\x0b\x43reateQueue\x12\x1c.messages.CreateQueueRequest\x1a\x1f.messages.CreateQueueOkResponse\"\x00\x12N\n\x0b\x44\x65leteQueue\x12\x1c.messages.DeleteQueueRequest\x1a\x1f.messages.DeleteQueueOkResponse\"\x00\x12R\n\rCreateChannel\x12\x1e.messages.CreateChannelRequest\x1a\x1f.messages.CreateChannelResponse\"\x00\x42\x06\xa2\x02\x03MSGb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0emessages.proto\x12\x08messages\")\n\x13SubscriptionRequest\x12\x12\n\nchannel_id\x18\x01 \x01(\t\"5\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\x12\r\n\x05topic\x18\x03 \x01(\t\";\n\x04Push\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\x0c\x12\r\n\x05topic\x18\x02 \x01(\t\x12\x13\n\x0bqueue_label\x18\x03 \x01(\t\"\x10\n\x0ePushOkResponse\")\n\x12\x43reateQueueRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\"\x17\n\x15\x43reateQueueOkResponse\")\n\x12\x44\x65leteQueueRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\"\x17\n\x15\x44\x65leteQueueOkResponse\":\n\x14\x43reateChannelRequest\x12\x13\n\x0bqueue_label\x18\x01 \x01(\t\x12\r\n\x05topic\x18\x02 \x01(\t\"+\n\x15\x43reateChannelResponse\x12\x12\n\nchannel_id\x18\x01 \x01(\t\"\x13\n\x11ListQueuesRequest\"$\n\x12ListQueuesResponse\x12\x0e\n\x06queues\x18\x01 \x03(\t\"\x15\n\x13ListChannelsRequest\"(\n\x14ListChannelsResponse\x12\x10\n\x08\x63hannels\x18\x01 \x03(\t2\xa6\x04\n\rMessageStream\x12J\n\x12SubscribeToChannel\x12\x1d.messages.SubscriptionRequest\x1a\x11.messages.Message\"\x00\x30\x01\x12\x39\n\x0bPushToQueue\x12\x0e.messages.Push\x1a\x18.messages.PushOkResponse\"\x00\x12N\n\x0b\x43reateQueue\x12\x1c.messages.CreateQueueRequest\x1a\x1f.messages.CreateQueueOkResponse\"\x00\x12N\n\x0b\x44\x65leteQueue\x12\x1c.messages.DeleteQueueRequest\x1a\x1f.messages.DeleteQueueOkResponse\"\x00\x12R\n\rCreateChannel\x12\x1e.messages.CreateChannelRequest\x1a\x1f.messages.CreateChannelResponse\"\x00\x12I\n\nListQueues\x12\x1b.messages.ListQueuesRequest\x1a\x1c.messages.ListQueuesResponse\"\x00\x12O\n\x0cListChannels\x12\x1d.messages.ListChannelsRequest\x1a\x1e.messages.ListChannelsResponse\"\x00\x42\x06\xa2\x02\x03MSGb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'messages_pb2', globals())
@@ -41,6 +41,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _CREATECHANNELREQUEST._serialized_end=399
   _CREATECHANNELRESPONSE._serialized_start=401
   _CREATECHANNELRESPONSE._serialized_end=444
-  _MESSAGESTREAM._serialized_start=447
-  _MESSAGESTREAM._serialized_end=841
+  _LISTQUEUESREQUEST._serialized_start=446
+  _LISTQUEUESREQUEST._serialized_end=465
+  _LISTQUEUESRESPONSE._serialized_start=467
+  _LISTQUEUESRESPONSE._serialized_end=503
+  _LISTCHANNELSREQUEST._serialized_start=505
+  _LISTCHANNELSREQUEST._serialized_end=526
+  _LISTCHANNELSRESPONSE._serialized_start=528
+  _LISTCHANNELSRESPONSE._serialized_end=568
+  _MESSAGESTREAM._serialized_start=571
+  _MESSAGESTREAM._serialized_end=1121
 # @@protoc_insertion_point(module_scope)
