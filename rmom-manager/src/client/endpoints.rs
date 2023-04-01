@@ -1,7 +1,10 @@
 use tonic::transport::Channel;
 
 use crate::messages::message_stream_client::MessageStreamClient;
-use crate::messages::{CreateChannelRequest, CreateQueueRequest, DeleteQueueRequest, ListQueuesRequest, ListChannelsRequest};
+use crate::messages::{
+    CreateChannelRequest, CreateQueueRequest, DeleteQueueRequest, ListChannelsRequest,
+    ListQueuesRequest,
+};
 
 pub struct Client {
     connection: MessageStreamClient<Channel>,

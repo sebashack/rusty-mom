@@ -56,7 +56,7 @@ async fn list_queues(
 
     match response {
         Ok(queues) => Ok(Json(queues)),
-        Err(err) => Err((Status::BadRequest, err))
+        Err(err) => Err((Status::BadRequest, err)),
     }
 }
 
@@ -69,7 +69,7 @@ async fn list_channels(
 
     match response {
         Ok(queues) => Ok(Json(queues)),
-        Err(err) => Err((Status::BadRequest, err))
+        Err(err) => Err((Status::BadRequest, err)),
     }
 }
 
@@ -95,5 +95,11 @@ async fn put_channel(
 }
 
 pub fn endpoints() -> Vec<Route> {
-    routes![post_queue, delete_queue, put_channel, list_queues, list_channels]
+    routes![
+        post_queue,
+        delete_queue,
+        put_channel,
+        list_queues,
+        list_channels
+    ]
 }
