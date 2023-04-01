@@ -38,13 +38,13 @@ impl MessageStream for StreamServer {
         info!("Request to SUBSCRIBE to channel {0}", req.channel_id);
 
         if let Ok(chan_id) = Uuid::parse_str(req.channel_id.as_str()) {
-            let mut lock = self.channel_receivers.lock().unwrap();
-            let chan_receiver = lock.remove(&chan_id);
-            drop(lock);
+            let lock = self.channel_receivers.lock().unwrap();
+            let chan_receiver = lock.get(&chan_id);
 
             if let Some(chan_receiver) = chan_receiver {
-                let stream = chan_receiver.receiver.filter(move |msg| {
-                    if let Some(chan_topic) = &chan_receiver.topic {
+                let maybe_topic = chan_receiver.topic.clone();
+                let stream = chan_receiver.receiver.clone().filter(move |msg| {
+                    if let Some(chan_topic) = &maybe_topic {
                         if let Ok(msg) = msg {
                             return chan_topic.as_str() == msg.topic.as_str();
                         } else {

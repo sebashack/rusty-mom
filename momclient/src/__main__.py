@@ -10,21 +10,21 @@ def main():
     mom_info1, channel1 = mom_client.create_channel("qa")
     mom_info2, channel2 = mom_client.create_channel("qa")
 
-    # def constant_push():
-    #     pusher1 = Pusher(mom_info1)
-    #     while True:
-    #         pusher1.push(b"Hello!", "qa")
-    #         time.sleep(1)
+    def constant_push():
+        pusher1 = Pusher(mom_info1)
+        while True:
+            pusher1.push(b"Hello!", "qa")
+            time.sleep(1)
 
-    # push_thread = threading.Thread(target=constant_push)
-    # push_thread.start()
+    push_thread = threading.Thread(target=constant_push)
+    push_thread.start()
 
-    # def consumer1():
-    #     subscriber = Subscriber(mom_info1, channel1)
-    #     subscriber.consume()
+    def consumer1():
+        subscriber = Subscriber(mom_info1, channel1)
+        subscriber.consume()
 
-    # consumer1_thread = threading.Thread(target=consumer1)
-    # consumer1_thread.start()
+    consumer1_thread = threading.Thread(target=consumer1)
+    consumer1_thread.start()
 
     queue_labels = mom_client.list_queues()
     channel_ids = mom_client.list_channels()
@@ -34,8 +34,8 @@ def main():
 
     channel_ids = mom_client.list_channels()
 
-    # while True:
-    #     time.sleep(10)
+    while True:
+        time.sleep(10)
 
     # pusher1.close()
 
