@@ -43,13 +43,21 @@ class MoMClient:
 
     def list_queues(self):
         response = requests.get(f"{self.root()}/queues")
+        data = response.json()
+
         print(f"Response Status: {response.status_code}")
-        print(f"Response body: {response.text}")
+        print(f"Response body: {data}")
+
+        return data
 
     def list_channels(self):
         response = requests.get(f"{self.root()}/channels")
+        data = response.json()
+
         print(f"Response Status: {response.status_code}")
-        print(f"Response body: {response.text}")
+        print(f"Response body: {data}")
+
+        return data
 
     # Helpers
     def root(self):

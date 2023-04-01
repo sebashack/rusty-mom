@@ -48,7 +48,7 @@ async fn delete_queue(
 }
 
 #[get("/queues")]
-async fn list_queues(
+async fn get_queues(
     state: &State<AvailableClients>,
 ) -> Result<Json<Vec<String>>, (Status, String)> {
     let mut client = state.clients.lock().await;
@@ -61,7 +61,7 @@ async fn list_queues(
 }
 
 #[get("/channels")]
-async fn list_channels(
+async fn get_channels(
     state: &State<AvailableClients>,
 ) -> Result<Json<Vec<String>>, (Status, String)> {
     let mut client = state.clients.lock().await;
@@ -99,7 +99,7 @@ pub fn endpoints() -> Vec<Route> {
         post_queue,
         delete_queue,
         put_channel,
-        list_queues,
-        list_channels
+        get_queues,
+        get_channels
     ]
 }
