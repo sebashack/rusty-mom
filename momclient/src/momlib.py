@@ -41,6 +41,11 @@ class MoMClient:
         print(f"Response body: {data}")
         return (MoMInfo(data["host"], data["port"]), Channel(data["id"]))
 
+    def delete_channel(self, channel_id):
+        response = requests.delete(f"{self.root()}/channels/{channel_id}")
+        print(f"Response Status: {response.status_code}")
+        print(f"Response body: {response.text}")
+
     def list_queues(self):
         response = requests.get(f"{self.root()}/queues")
         data = response.json()

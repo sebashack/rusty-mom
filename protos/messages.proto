@@ -12,6 +12,7 @@ service MessageStream {
   rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}
   rpc ListQueues (ListQueuesRequest) returns (ListQueuesResponse) {}
   rpc ListChannels (ListChannelsRequest) returns (ListChannelsResponse) {}
+  rpc DeleteChannel (DeleteChannelRequest) returns (DeleteChannelOkResponse) {}
 }
 
 message SubscriptionRequest {
@@ -64,3 +65,9 @@ message ListChannelsRequest {}
 message ListChannelsResponse {
   repeated string channels = 1;
 }
+
+message DeleteChannelRequest {
+  string channel_id = 1;
+}
+
+message DeleteChannelOkResponse {}

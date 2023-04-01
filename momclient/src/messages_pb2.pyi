@@ -29,6 +29,16 @@ class CreateQueueRequest(_message.Message):
     queue_label: str
     def __init__(self, queue_label: _Optional[str] = ...) -> None: ...
 
+class DeleteChannelOkResponse(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class DeleteChannelRequest(_message.Message):
+    __slots__ = ["channel_id"]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    channel_id: str
+    def __init__(self, channel_id: _Optional[str] = ...) -> None: ...
+
 class DeleteQueueOkResponse(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
