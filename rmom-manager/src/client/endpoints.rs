@@ -2,8 +2,8 @@ use tonic::transport::Channel;
 
 use crate::messages::message_stream_client::MessageStreamClient;
 use crate::messages::{
-    CreateChannelRequest, CreateQueueRequest, DeleteQueueRequest, ListChannelsRequest,
-    ListQueuesRequest, DeleteChannelRequest
+    CreateChannelRequest, CreateQueueRequest, DeleteChannelRequest, DeleteQueueRequest,
+    ListChannelsRequest, ListQueuesRequest,
 };
 
 pub struct Client {
@@ -49,6 +49,8 @@ impl Client {
         match self.connection.list_channels(req).await {
             Ok(channels) => Ok(channels.get_ref().channels.clone()),
             Err(err) => Err(format!("Failed to list channels: {}", err)),
+        }
+    }
 
     pub async fn delete_channel(&mut self, channel_id: String) -> Result<(), String> {
         let req = tonic::Request::new(DeleteChannelRequest { channel_id });

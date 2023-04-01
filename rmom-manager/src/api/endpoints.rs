@@ -69,6 +69,9 @@ async fn get_channels(
 
     match response {
         Ok(queues) => Ok(Json(queues)),
+        Err(err) => Err((Status::BadRequest, err)),
+    }
+}
 
 #[delete("/channels/<channel_id>")]
 async fn delete_channel(
