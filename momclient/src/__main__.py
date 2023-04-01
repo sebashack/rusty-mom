@@ -26,6 +26,9 @@ def main():
     consumer1_thread = threading.Thread(target=consumer1)
     consumer1_thread.start()
 
+    queue_labels = mom_client.list_queues()
+    channel_ids = mom_client.list_channels()
+
     while True:
         time.sleep(10)
 

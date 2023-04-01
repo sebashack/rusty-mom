@@ -11,7 +11,8 @@ use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
     CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
-    DeleteQueueOkResponse, DeleteQueueRequest, Message, Push, PushOkResponse, SubscriptionRequest,
+    DeleteQueueOkResponse, DeleteQueueRequest, ListChannelsRequest, ListChannelsResponse,
+    ListQueuesRequest, ListQueuesResponse, Message, Push, PushOkResponse, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -65,10 +66,7 @@ impl MessageStream for StreamServer {
         }
     }
 
-    async fn push_to_queue(
-        &self,
-        push: Request<Push>,
-    ) -> Result<Response<PushOkResponse>, Status> {
+    async fn push_to_queue(&self, push: Request<Push>) -> Result<Response<PushOkResponse>, Status> {
         let push = push.into_inner();
         info!("Request to PUSH");
 
@@ -163,6 +161,37 @@ impl MessageStream for StreamServer {
             }
             None => Err(Status::new(Code::InvalidArgument, "Queue not found")),
         }
+    }
+
+    async fn list_queues(
+        &self,
+        _request: Request<ListQueuesRequest>,
+    ) -> Result<Response<ListQueuesResponse>, Status> {
+        info!("Request to LIST queues");
+
+        let broadcast_ends = self.broadcast_ends.lock().unwrap();
+        let queues_labels = broadcast_ends.keys().cloned().collect();
+
+        Ok(Response::new(ListQueuesResponse {
+            queues: queues_labels,
+        }))
+    }
+
+    async fn list_channels(
+        &self,
+        _request: Request<ListChannelsRequest>,
+    ) -> Result<Response<ListChannelsResponse>, Status> {
+        info!("Request to LIST channels");
+
+        let channel_receivers = self.channel_receivers.lock().unwrap();
+        let channel_ids = channel_receivers
+            .keys()
+            .map(|uuid| uuid.to_string())
+            .collect();
+
+        Ok(Response::new(ListChannelsResponse {
+            channels: channel_ids,
+        }))
     }
 }
 

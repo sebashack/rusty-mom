@@ -47,6 +47,32 @@ async fn delete_queue(
     }
 }
 
+#[get("/queues")]
+async fn get_queues(
+    state: &State<AvailableClients>,
+) -> Result<Json<Vec<String>>, (Status, String)> {
+    let mut client = state.clients.lock().await;
+    let response = client.list_queues().await;
+
+    match response {
+        Ok(queues) => Ok(Json(queues)),
+        Err(err) => Err((Status::BadRequest, err)),
+    }
+}
+
+#[get("/channels")]
+async fn get_channels(
+    state: &State<AvailableClients>,
+) -> Result<Json<Vec<String>>, (Status, String)> {
+    let mut client = state.clients.lock().await;
+    let response = client.list_channels().await;
+
+    match response {
+        Ok(queues) => Ok(Json(queues)),
+        Err(err) => Err((Status::BadRequest, err)),
+    }
+}
+
 #[put("/queues/<label>/channels/<topic>", format = "json")]
 async fn put_channel(
     state: &State<AvailableClients>,
@@ -69,5 +95,11 @@ async fn put_channel(
 }
 
 pub fn endpoints() -> Vec<Route> {
-    routes![post_queue, delete_queue, put_channel]
+    routes![
+        post_queue,
+        delete_queue,
+        put_channel,
+        get_queues,
+        get_channels
+    ]
 }
