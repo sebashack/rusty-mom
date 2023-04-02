@@ -22,7 +22,7 @@ source "$HOME/.cargo/env"
 
 rustup self update
 rustup default nightly
-cargo install sqlx-cli --version 0.5.13 --no-default-features --features native-tls,postgres
+cargo install sqlx-cli --version 0.6.3 --no-default-features --features native-tls,postgres
 
 # Install docker
 if ! type "docker" > /dev/null; then
