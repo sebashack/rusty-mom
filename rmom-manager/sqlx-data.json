@@ -1,3 +1,208 @@
 {
-  "db": "PostgreSQL"
+  "db": "PostgreSQL",
+  "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Bool",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
+  },
+  "66d2a548605fe9cc16a541b6fcff45e74c02816b3b0b5b0cd1b09e4c482b405a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO queue (id, label, mom_id) VALUES ($1, $2, $3)"
+  },
+  "88d4d865c1c8119c8a07439d96a6c82c4878f0e06cece040af30ec1bd6cfc709": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id, label, mom_id FROM queue WHERE label = $1"
+  },
+  "a0f46c783675308719e341d6bdc983645403ec1542bfb4b6a25017e17b43b38a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Int2",
+          "Bool"
+        ]
+      }
+    },
+    "query": "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4"
+  },
+  "aa562058ae7ef7e6c53588f537b44a7d21f11c1821e5c430970ed1e5f55304af": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int2"
+        },
+        {
+          "name": "is_up",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, host, port, is_up FROM mom"
+  },
+  "b907bc49ec4a79ed69ee0a27a2e1c252b1f8a802896df0cb9ba1ae6d4c8c4fd6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "UPDATE queue SET mom_id=$2, updated_at=$3 WHERE id = $1"
+  },
+  "c68663540f0a795a7411c0ba889e128131ae35efdcf7dbfe356e1c6dba572c79": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, label, mom_id FROM queue"
+  },
+  "da13ee985a8da43115b9232717b8ff1642fea7ea55ba936e5e9792f90248ff63": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int2"
+        },
+        {
+          "name": "is_up",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, host, port, is_up FROM mom WHERE id = $1"
+  },
+  "deab8c0396e0f7108aa84e095dd640a26de81c58b2b4c5782e1f750944bcbc91": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM queue WHERE id = $1"
+  }
 }
