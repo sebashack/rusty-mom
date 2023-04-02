@@ -11,12 +11,13 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn connect(host: String, port: u16) -> Self {
+    pub async fn connect(host: String, port: u16) -> Option<Self> {
         println!("Connecting to host on http://{host}:{port}");
         let addr = format!("http://{}:{}", host, port);
 
-        Client {
-            connection: MessageStreamClient::connect(addr).await.unwrap(),
+        match MessageStreamClient::connect(addr).await {
+            Ok(connection) => Some(Client { connection }),
+            Err(_) => None,
         }
     }
 

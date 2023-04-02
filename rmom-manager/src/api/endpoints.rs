@@ -3,13 +3,24 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::client::endpoints::Client;
 
-pub struct AvailableClients {
-    pub clients: Arc<Mutex<Client>>,
+pub struct RegisteredMoM {
+    pub connection: Option<Client>,
+    pub host: String,
+    pub port: u16,
 }
+
+pub struct RegisteredMoMs {
+    pub moms: Arc<Mutex<HashMap<(String, u16), RegisteredMoM>>>,
+}
+
+// TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
+const HARCODED_HOST: &str = "127.0.0.1";
+const HARCODED_PORT: u16 = 50051;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
@@ -20,13 +31,16 @@ pub struct ConnectionInfo {
 }
 
 #[post("/queues/<label>")]
-async fn post_queue(
-    state: &State<AvailableClients>,
-    label: String,
-) -> Result<(), (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.create_queue(label).await;
+async fn post_queue(state: &State<RegisteredMoMs>, label: String) -> Result<(), (Status, String)> {
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
+    let response = client.create_queue(label).await;
     match response {
         Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
@@ -35,12 +49,18 @@ async fn post_queue(
 
 #[delete("/queues/<label>")]
 async fn delete_queue(
-    state: &State<AvailableClients>,
+    state: &State<RegisteredMoMs>,
     label: String,
 ) -> Result<(), (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.delete_queue(label).await;
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
+    let response = client.delete_queue(label).await;
     match response {
         Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
@@ -48,12 +68,16 @@ async fn delete_queue(
 }
 
 #[get("/queues")]
-async fn get_queues(
-    state: &State<AvailableClients>,
-) -> Result<Json<Vec<String>>, (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.list_queues().await;
+async fn get_queues(state: &State<RegisteredMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
+    let response = client.list_queues().await;
     match response {
         Ok(queues) => Ok(Json(queues)),
         Err(err) => Err((Status::BadRequest, err)),
@@ -62,11 +86,17 @@ async fn get_queues(
 
 #[get("/channels")]
 async fn get_channels(
-    state: &State<AvailableClients>,
+    state: &State<RegisteredMoMs>,
 ) -> Result<Json<Vec<String>>, (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.list_channels().await;
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
+    let response = client.list_channels().await;
     match response {
         Ok(queues) => Ok(Json(queues)),
         Err(err) => Err((Status::BadRequest, err)),
@@ -75,12 +105,18 @@ async fn get_channels(
 
 #[delete("/channels/<channel_id>")]
 async fn delete_channel(
-    state: &State<AvailableClients>,
+    state: &State<RegisteredMoMs>,
     channel_id: String,
 ) -> Result<(), (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.delete_channel(channel_id).await;
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
+    let response = client.delete_channel(channel_id).await;
     match response {
         Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
@@ -89,20 +125,24 @@ async fn delete_channel(
 
 #[put("/queues/<label>/channels/<topic>", format = "json")]
 async fn put_channel(
-    state: &State<AvailableClients>,
+    state: &State<RegisteredMoMs>,
     label: String,
     topic: String,
 ) -> Result<Json<ConnectionInfo>, (Status, String)> {
-    let mut client = state.clients.lock().await;
-    let response = client.create_channel(label, topic).await;
+    let mut lock = state.moms.lock().await;
+    let client = lock
+        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
+        .unwrap()
+        .connection
+        .as_mut()
+        .unwrap();
 
-    // TODO: Unhardcode host and port when we keep track of
-    // available clients.
+    let response = client.create_channel(label, topic).await;
     match response {
         Ok(channel_id) => Ok(Json(ConnectionInfo {
             id: channel_id,
-            host: "127.0.0.1".to_string(),
-            port: 50051,
+            host: HARCODED_HOST.to_string(),
+            port: HARCODED_PORT,
         })),
         Err(err) => Err((Status::BadRequest, err)),
     }

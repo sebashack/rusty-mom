@@ -4,7 +4,9 @@ port = 8082
 workers = 5
 max_blocking = 512
 keep_alive = 5
+moms = [{ host = "127.0.0.1", port = 50051 }]
 
 [release]
 port = 8080
 workers = 20
+moms = [{ host = "127.0.0.1", port = 50051 }]

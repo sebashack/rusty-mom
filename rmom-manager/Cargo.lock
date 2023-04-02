@@ -263,6 +263,7 @@ dependencies = [
  "atomic",
  "pear",
  "serde",
+ "serde_json",
  "toml",
  "uncased",
  "version_check",
@@ -1040,6 +1041,7 @@ name = "rmom-manager"
 version = "0.1.0"
 dependencies = [
  "env_logger",
+ "figment",
  "futures",
  "futures-lite",
  "log",
