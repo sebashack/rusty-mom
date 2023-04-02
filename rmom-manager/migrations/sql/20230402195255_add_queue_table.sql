@@ -1,0 +1,9 @@
+CREATE TABLE queue (
+    id            UUID PRIMARY KEY,
+    label         VARCHAR(255) NOT NULL,
+    mom_id        UUID NULL,
+    created_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
+    updated_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
+    UNIQUE        (label),
+    CONSTRAINT    fk_mom FOREIGN KEY(mom_id) REFERENCES mom(id)
+);

@@ -1,0 +1,20 @@
+version: '3.1'
+networks:
+  rmom_postgresql:
+    external: false
+
+services:
+  db-server:
+    container_name: rmom_postgresql
+    image: postgres:12.7
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: postgres
+      POSTGRES_DB: rmom_manager
+    networks:
+      - rmom_postgresql
+    volumes:
+      - ${PSQL_DATA_DIR}:/var/lib/postgresql/data

@@ -13,7 +13,9 @@ futures-lite = "1.12.0"
 log = "0.4.17"
 prost = "0.11.8"
 rocket = { version = "0.5.0-rc.2", features = ["json", "uuid"] }
+rocket_db_pools = { version = "0.1.0-rc.2", features = ["sqlx_postgres"] }
 serde = { version = "1.0.152", features = ["derive"] }
+sqlx = { version = "0.5.13", default-features = false, features = ["macros", "postgres", "offline", "migrate", "uuid", "time","bigdecimal","runtime-tokio-native-tls"] }
 time = { version = "0.3.19", features = ["serde"] }
 tonic = "0.8.3"
 
