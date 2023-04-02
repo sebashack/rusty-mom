@@ -68,7 +68,7 @@
         "Left": [
           "Uuid",
           "Varchar",
-          "Int2",
+          "Int4",
           "Bool"
         ]
       }
@@ -91,7 +91,7 @@
         {
           "name": "port",
           "ordinal": 2,
-          "type_info": "Int2"
+          "type_info": "Int4"
         },
         {
           "name": "is_up",
@@ -171,7 +171,7 @@
         {
           "name": "port",
           "ordinal": 2,
-          "type_info": "Int2"
+          "type_info": "Int4"
         },
         {
           "name": "is_up",

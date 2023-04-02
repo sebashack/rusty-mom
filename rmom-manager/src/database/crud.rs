@@ -5,16 +5,18 @@ use super::connection::PoolConnectionPtr;
 
 use crate::utils::time::sql_timestamp;
 
+#[derive(Debug)]
 pub struct QueueRecord {
     pub id: Uuid,
     pub label: String,
     pub mom_id: Option<Uuid>,
 }
 
+#[derive(Debug)]
 pub struct MoMRecord {
     pub id: Uuid,
     pub host: String,
-    pub port: i16,
+    pub port: i32,
     pub is_up: bool,
 }
 
@@ -32,10 +34,7 @@ pub async fn select_all_queues(conn: &mut PoolConnectionPtr) -> Vec<QueueRecord>
         .unwrap()
 }
 
-pub async fn select_queue(
-    conn: &mut PoolConnectionPtr,
-    queue_label: &str,
-) -> Option<QueueRecord> {
+pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Option<QueueRecord> {
     sqlx::query_as!(
         QueueRecord,
         "SELECT id, label, mom_id FROM queue WHERE label = $1",
@@ -46,10 +45,7 @@ pub async fn select_queue(
     .unwrap()
 }
 
-pub async fn select_mom(
-    conn: &mut PoolConnectionPtr,
-    mom_id: &Uuid,
-) -> Option<MoMRecord> {
+pub async fn select_mom(conn: &mut PoolConnectionPtr, mom_id: &Uuid) -> Option<MoMRecord> {
     sqlx::query_as!(
         MoMRecord,
         "SELECT id, host, port, is_up FROM mom WHERE id = $1",
@@ -64,7 +60,7 @@ pub async fn insert_mom(
     conn: &mut PoolConnectionPtr,
     id: &Uuid,
     host: &str,
-    port: i16,
+    port: i32,
     is_up: bool,
 ) {
     sqlx::query!(

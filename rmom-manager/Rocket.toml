@@ -10,3 +10,10 @@ moms = [{ host = "127.0.0.1", port = 50051 }]
 port = 8080
 workers = 20
 moms = [{ host = "127.0.0.1", port = 50051 }]
+
+[default.databases.rmom_manager]
+url = "postgresql://postgres:secret@127.0.0.1:5432/rmom_manager"
+min_connections = 3
+max_connections = 5
+idle_timeout = 120
+connect_timeout = 7

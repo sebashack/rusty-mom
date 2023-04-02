@@ -11,23 +11,23 @@ use crate::client::endpoints::Client;
 pub struct RegisteredMoM {
     pub connection: Option<Client>,
     pub host: String,
-    pub port: u16,
+    pub port: i32,
 }
 
 pub struct RegisteredMoMs {
-    pub moms: Arc<Mutex<HashMap<(String, u16), RegisteredMoM>>>,
+    pub moms: Arc<Mutex<HashMap<(String, i32), RegisteredMoM>>>,
 }
 
 // TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
 const HARCODED_HOST: &str = "127.0.0.1";
-const HARCODED_PORT: u16 = 50051;
+const HARCODED_PORT: i32 = 50051;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ConnectionInfo {
     pub id: String,
     pub host: String,
-    pub port: u16,
+    pub port: i32,
 }
 
 #[post("/queues/<label>")]

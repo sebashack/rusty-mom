@@ -11,7 +11,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn connect(host: String, port: u16) -> Option<Self> {
+    pub async fn connect(host: String, port: i32) -> Option<Self> {
         println!("Connecting to host on http://{host}:{port}");
         let addr = format!("http://{}:{}", host, port);
 

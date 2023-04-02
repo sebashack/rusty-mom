@@ -1,12 +1,17 @@
 use futures::lock::Mutex;
+use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::Deserialize;
+use rocket::tokio::{task, time};
 use rocket::{Build, Request, Rocket};
+use rocket_db_pools::Database;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::endpoints::{endpoints, RegisteredMoM, RegisteredMoMs};
 use crate::client::endpoints::Client;
+use crate::database::connection::Db;
+use crate::database::crud;
 
 #[get("/status")]
 pub async fn status() -> &'static str {
@@ -47,7 +52,7 @@ fn default(status: Status, req: &Request) -> String {
 #[serde(crate = "rocket::serde")]
 struct MoMConfig {
     host: String,
-    port: u16,
+    port: i32,
 }
 
 #[derive(Deserialize)]
@@ -61,21 +66,8 @@ pub async fn build_server() -> Rocket<Build> {
     let figment = rocket.figment();
     let mom_config: Config = figment.extract().expect("config");
 
-    let mut moms = HashMap::new();
-    for c in mom_config.moms.iter() {
-        let mom = RegisteredMoM {
-            connection: Client::connect(c.host.clone(), c.port).await,
-            host: c.host.clone(),
-            port: c.port,
-        };
-
-        moms.insert((c.host.clone(), c.port), mom);
-    }
-
     rocket
-        .manage(RegisteredMoMs {
-            moms: Arc::new(Mutex::new(moms)),
-        })
+        .attach(Db::init())
         .mount("/", routes![status])
         .mount("/", endpoints())
         .register(
@@ -89,4 +81,45 @@ pub async fn build_server() -> Rocket<Build> {
                 default
             ],
         )
+        .attach(AdHoc::on_ignite("Manager thread", |rocket| async move {
+            let db = Db::fetch(&rocket).unwrap().clone();
+            let mut conn = db.acquire().await.unwrap();
+            let mut moms = HashMap::new();
+
+            for c in mom_config.moms.iter() {
+                let client = Client::connect(c.host.clone(), c.port).await;
+                let is_up = client.is_some();
+                let mom = RegisteredMoM {
+                    connection: client,
+                    host: c.host.clone(),
+                    port: c.port,
+                };
+
+                moms.insert((c.host.clone(), c.port), mom);
+
+                let mom_id = sqlx::types::uuid::Uuid::new_v4();
+                crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port as i32, is_up).await;
+            }
+
+            rocket.manage(RegisteredMoMs {
+                moms: Arc::new(Mutex::new(moms)),
+            })
+        }))
+        .attach(AdHoc::on_ignite("Manager thread", |rocket| async {
+            let db = Db::fetch(&rocket).unwrap().0.clone();
+            task::spawn(async move {
+                loop {
+                    if let Ok(mut conn) = db.acquire().await {
+                        time::sleep(time::Duration::from_secs(3)).await;
+                        // TODO: Trigger mom management here
+                        let moms = crud::select_all_moms(&mut conn).await;
+                        println!("MoMs {:#?}", moms);
+                    } else {
+                        println!("Could not get DB lock");
+                    }
+                }
+            });
+
+            rocket
+        }))
 }
