@@ -1,5 +1,6 @@
 use rocket::http::Status;
 use rocket::serde::json::Json;
+use rocket::serde::uuid::Uuid;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
 
@@ -20,19 +21,28 @@ pub struct ConnectionInfo {
 }
 
 #[post("/queues/<label>")]
-async fn post_queue(state: &State<RegisteredMoMs>, label: String) -> Result<(), (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
-
-    let response = client.create_queue(label).await;
-    match response {
-        Ok(_) => Ok(()),
-        Err(err) => Err((Status::BadRequest, err)),
+async fn post_queue(
+    mut db: DbConnection,
+    state: &State<RegisteredMoMs>,
+    label: String,
+) -> Result<(), (Status, String)> {
+    if crud::select_if_queue_exists(&mut db, label.as_str()).await {
+        Err((Status::BadRequest, "Queue already exists".to_string()))
+    } else {
+        if let Some((key, mom_id)) = RegisteredMoMs::get_random_up_key(&mut db).await {
+            let mut lock = state.moms.lock().await;
+            let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+            match client.create_queue(label.as_str()).await {
+                Ok(_) => {
+                    let queue_id = Uuid::new_v4();
+                    crud::insert_queue(&mut db, &queue_id, label.as_str(), &mom_id).await;
+                    Ok(())
+                }
+                Err(err) => Err((Status::BadRequest, err)),
+            }
+        } else {
+            Err((Status::InternalServerError, "No MoMs available".to_string()))
+        }
     }
 }
 
@@ -49,7 +59,7 @@ async fn delete_queue(
         .as_mut()
         .unwrap();
 
-    let response = client.delete_queue(label).await;
+    let response = client.delete_queue(label.as_str()).await;
     match response {
         Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
@@ -94,7 +104,7 @@ async fn delete_channel(
         .as_mut()
         .unwrap();
 
-    let response = client.delete_channel(channel_id).await;
+    let response = client.delete_channel(channel_id.as_str()).await;
     match response {
         Ok(_) => Ok(()),
         Err(err) => Err((Status::BadRequest, err)),
@@ -115,7 +125,7 @@ async fn put_channel(
         .as_mut()
         .unwrap();
 
-    let response = client.create_channel(label, topic).await;
+    let response = client.create_channel(label.as_str(), topic.as_str()).await;
     match response {
         Ok(channel_id) => Ok(Json(ConnectionInfo {
             id: channel_id,

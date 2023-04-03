@@ -1,8 +1,14 @@
 use crate::client::endpoints::Client;
 use futures::lock::Mutex;
+use rand::prelude::IteratorRandom;
+use rocket::serde::uuid::Uuid;
 use std::collections::HashMap;
-use rand::seq::SliceRandom;
 use std::sync::Arc;
+
+use crate::database::connection::PoolConnectionPtr;
+use crate::database::crud::{self, MoMRecord};
+
+type Key = (String, i32);
 
 pub struct RegisteredMoM {
     pub connection: Option<Client>,
@@ -11,23 +17,27 @@ pub struct RegisteredMoM {
 }
 
 pub struct RegisteredMoMs {
-    pub moms: Arc<Mutex<HashMap<(String, i32), RegisteredMoM>>>,
+    pub moms: Arc<Mutex<HashMap<Key, RegisteredMoM>>>,
 }
 
 impl RegisteredMoMs {
-    pub fn new(moms: HashMap<(String, i32), RegisteredMoM>) -> Self {
+    pub fn new(moms: HashMap<Key, RegisteredMoM>) -> Self {
         RegisteredMoMs {
             moms: Arc::new(Mutex::new(moms)),
         }
     }
 
-    fn gandom_up(moms: &HashMap<(String, i32), RegisteredMoM>) -> Option<&RegisteredMoM> {
-        unimplemented!()
-    }
+    pub async fn get_random_up_key(db: &mut PoolConnectionPtr) -> Option<(Key, Uuid)> {
+        let moms = crud::select_all_moms(db).await;
+        let random_mom: Option<&MoMRecord> = moms
+            .iter()
+            .filter(|m| m.is_up)
+            .choose(&mut rand::thread_rng());
 
-    fn get_random(moms: &HashMap<(String, i32), RegisteredMoM>) -> &RegisteredMoM {
-        let keys: Vec<&(String, i32)> = moms.keys().collect();
-        let key = keys.choose(&mut rand::thread_rng()).unwrap();
-        moms.get(key).unwrap()
+        if let Some(mom) = random_mom {
+            Some(((mom.host.clone(), mom.port), mom.id.clone()))
+        } else {
+            None
+        }
     }
 }

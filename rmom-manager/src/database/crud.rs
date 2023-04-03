@@ -45,6 +45,14 @@ pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Op
     .unwrap()
 }
 
+pub async fn select_if_queue_exists(conn: &mut PoolConnectionPtr, label: &str) -> bool {
+    sqlx::query!("SELECT id FROM queue WHERE label = $1", label)
+        .fetch_optional(conn)
+        .await
+        .unwrap()
+        .is_some()
+}
+
 pub async fn select_mom(conn: &mut PoolConnectionPtr, mom_id: &Uuid) -> Option<MoMRecord> {
     sqlx::query_as!(
         MoMRecord,

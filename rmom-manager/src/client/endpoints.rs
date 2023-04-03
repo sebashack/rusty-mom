@@ -21,16 +21,20 @@ impl Client {
         }
     }
 
-    pub async fn create_queue(&mut self, queue_label: String) -> Result<(), String> {
-        let req = tonic::Request::new(CreateQueueRequest { queue_label });
+    pub async fn create_queue(&mut self, queue_label: &str) -> Result<(), String> {
+        let req = tonic::Request::new(CreateQueueRequest {
+            queue_label: queue_label.to_string(),
+        });
         match self.connection.create_queue(req).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!("Failed to create queue: {}", err)),
         }
     }
 
-    pub async fn delete_queue(&mut self, queue_label: String) -> Result<(), String> {
-        let req = tonic::Request::new(DeleteQueueRequest { queue_label });
+    pub async fn delete_queue(&mut self, queue_label: &str) -> Result<(), String> {
+        let req = tonic::Request::new(DeleteQueueRequest {
+            queue_label: queue_label.to_string(),
+        });
         match self.connection.delete_queue(req).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!("Failed to delete queue: {}", err)),
@@ -53,8 +57,10 @@ impl Client {
         }
     }
 
-    pub async fn delete_channel(&mut self, channel_id: String) -> Result<(), String> {
-        let req = tonic::Request::new(DeleteChannelRequest { channel_id });
+    pub async fn delete_channel(&mut self, channel_id: &str) -> Result<(), String> {
+        let req = tonic::Request::new(DeleteChannelRequest {
+            channel_id: channel_id.to_string(),
+        });
         match self.connection.delete_channel(req).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!("Failed to delete queue: {}", err)),
@@ -63,10 +69,13 @@ impl Client {
 
     pub async fn create_channel(
         &mut self,
-        queue_label: String,
-        topic: String,
+        queue_label: &str,
+        topic: &str,
     ) -> Result<String, String> {
-        let req = tonic::Request::new(CreateChannelRequest { queue_label, topic });
+        let req = tonic::Request::new(CreateChannelRequest {
+            queue_label: queue_label.to_string(),
+            topic: topic.to_string(),
+        });
         match self.connection.create_channel(req).await {
             Ok(res) => Ok(res.into_inner().channel_id),
             Err(err) => Err(format!("Failed to create channel: {}", err)),

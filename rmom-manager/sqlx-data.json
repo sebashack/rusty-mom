@@ -28,6 +28,26 @@
     },
     "query": "INSERT INTO queue (id, label, mom_id) VALUES ($1, $2, $3)"
   },
+  "7a087c6080290772894c51bee56be10d934d36772aa0585caf3eebfaf59506ef": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id FROM queue WHERE label = $1"
+  },
   "88d4d865c1c8119c8a07439d96a6c82c4878f0e06cece040af30ec1bd6cfc709": {
     "describe": {
       "columns": [
