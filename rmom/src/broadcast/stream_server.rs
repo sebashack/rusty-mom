@@ -109,6 +109,7 @@ impl MessageStream for StreamServer {
         }
     }
 
+    // TODO: We need to delete all of the channels related to this queue.
     async fn delete_queue(
         &self,
         request: Request<DeleteQueueRequest>,
