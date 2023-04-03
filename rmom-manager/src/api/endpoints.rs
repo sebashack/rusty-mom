@@ -4,7 +4,7 @@ use rocket::serde::uuid::Uuid;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
 
-use crate::api::mom::RegisteredMoMs;
+use crate::api::mom::AvailableMoMs;
 use crate::database::connection::DbConnection;
 use crate::database::crud;
 
@@ -23,13 +23,13 @@ pub struct ConnectionInfo {
 #[post("/queues/<label>")]
 async fn post_queue(
     mut db: DbConnection,
-    state: &State<RegisteredMoMs>,
+    state: &State<AvailableMoMs>,
     label: String,
 ) -> Result<(), (Status, String)> {
     if crud::select_if_queue_exists(&mut db, label.as_str()).await {
         Err((Status::BadRequest, "Queue already exists".to_string()))
     } else {
-        if let Some((key, mom_id)) = RegisteredMoMs::get_random_up_key(&mut db).await {
+        if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db).await {
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
             match client.create_queue(label.as_str()).await {
@@ -49,7 +49,7 @@ async fn post_queue(
 #[delete("/queues/<label>")]
 async fn delete_queue(
     mut db: DbConnection,
-    state: &State<RegisteredMoMs>,
+    state: &State<AvailableMoMs>,
     label: String,
 ) -> Result<(), (Status, String)> {
     if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
@@ -85,9 +85,7 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
 }
 
 #[get("/channels")]
-async fn get_channels(
-    state: &State<RegisteredMoMs>,
-) -> Result<Json<Vec<String>>, (Status, String)> {
+async fn get_channels(state: &State<AvailableMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
     let mut lock = state.moms.lock().await;
     let client = lock
         .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
@@ -105,7 +103,7 @@ async fn get_channels(
 
 #[delete("/channels/<channel_id>")]
 async fn delete_channel(
-    state: &State<RegisteredMoMs>,
+    state: &State<AvailableMoMs>,
     channel_id: String,
 ) -> Result<(), (Status, String)> {
     let mut lock = state.moms.lock().await;
@@ -125,7 +123,7 @@ async fn delete_channel(
 
 #[put("/queues/<label>/channels/<topic>", format = "json")]
 async fn put_channel(
-    state: &State<RegisteredMoMs>,
+    state: &State<AvailableMoMs>,
     label: String,
     topic: String,
 ) -> Result<Json<ConnectionInfo>, (Status, String)> {

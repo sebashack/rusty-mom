@@ -7,7 +7,7 @@ use rocket_db_pools::Database;
 use std::collections::HashMap;
 
 use super::endpoints::endpoints;
-use crate::api::mom::{RegisteredMoM, RegisteredMoMs};
+use crate::api::mom::{AvailableMoMs, RegisteredMoM};
 use crate::client::endpoints::Client;
 use crate::database::connection::Db;
 use crate::database::crud;
@@ -100,7 +100,7 @@ pub async fn build_server() -> Rocket<Build> {
                 crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port, is_up).await;
             }
 
-            rocket.manage(RegisteredMoMs::new(moms))
+            rocket.manage(AvailableMoMs::new(moms))
         }))
         .attach(AdHoc::on_ignite("Manager thread", |rocket| async {
             let db = Db::fetch(&rocket).unwrap().0.clone();

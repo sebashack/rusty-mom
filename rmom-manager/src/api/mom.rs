@@ -16,13 +16,13 @@ pub struct RegisteredMoM {
     pub port: i32,
 }
 
-pub struct RegisteredMoMs {
+pub struct AvailableMoMs {
     pub moms: Arc<Mutex<HashMap<Key, RegisteredMoM>>>,
 }
 
-impl RegisteredMoMs {
+impl AvailableMoMs {
     pub fn new(moms: HashMap<Key, RegisteredMoM>) -> Self {
-        RegisteredMoMs {
+        AvailableMoMs {
             moms: Arc::new(Mutex::new(moms)),
         }
     }
