@@ -32,6 +32,7 @@ async fn post_queue(
         if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db).await {
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+
             match client.create_queue(label.as_str()).await {
                 Ok(_) => {
                     let queue_id = Uuid::new_v4();
@@ -55,7 +56,7 @@ async fn delete_queue(
 ) -> Result<(), (Status, String)> {
     if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
         if queue_record.mom_id.is_none() {
-            return Err((Status::InternalServerError, "MoM not available".to_string()));
+            return Err((Status::NotFound, "Queue not found".to_string()));
         }
 
         if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
@@ -63,8 +64,7 @@ async fn delete_queue(
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
 
-            let response = client.delete_queue(label.as_str()).await;
-            match response {
+            match client.delete_queue(label.as_str()).await {
                 Ok(_) => {
                     crud::delete_queue(&mut db, &queue_record.id).await;
                     Ok(())

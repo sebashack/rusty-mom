@@ -8,7 +8,9 @@ use std::sync::Arc;
 use crate::database::connection::PoolConnectionPtr;
 use crate::database::crud::{self, MoMRecord};
 
-type Key = (String, i32);
+type Host = String;
+type Port = i32;
+type Key = (Host, Port);
 
 pub struct RegisteredMoM {
     pub connection: Option<Client>,
