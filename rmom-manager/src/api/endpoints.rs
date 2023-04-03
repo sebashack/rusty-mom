@@ -48,21 +48,33 @@ async fn post_queue(
 
 #[delete("/queues/<label>")]
 async fn delete_queue(
+    mut db: DbConnection,
     state: &State<RegisteredMoMs>,
     label: String,
 ) -> Result<(), (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
+    if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
+        if queue_record.mom_id.is_none() {
+            return Err((Status::InternalServerError, "MoM not available".to_string()));
+        }
 
-    let response = client.delete_queue(label.as_str()).await;
-    match response {
-        Ok(_) => Ok(()),
-        Err(err) => Err((Status::BadRequest, err)),
+        if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
+            let key = (mom_record.host, mom_record.port);
+            let mut lock = state.moms.lock().await;
+            let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+
+            let response = client.delete_queue(label.as_str()).await;
+            match response {
+                Ok(_) => {
+                    crud::delete_queue(&mut db, &queue_record.id).await;
+                    Ok(())
+                }
+                Err(err) => Err((Status::BadRequest, err)),
+            }
+        } else {
+            Err((Status::InternalServerError, "MoM not available".to_string()))
+        }
+    } else {
+        Err((Status::NotFound, "Queue not found".to_string()))
     }
 }
 
