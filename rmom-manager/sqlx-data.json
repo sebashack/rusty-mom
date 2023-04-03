@@ -14,6 +14,22 @@
     },
     "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
   },
+  "46a2b54294dfd88ff5b7abbf0f02fcdb1dae4542e98761973577b92bbbe25bad": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Int4",
+          "Bool",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4, updated_at = $5"
+  },
   "66d2a548605fe9cc16a541b6fcff45e74c02816b3b0b5b0cd1b09e4c482b405a": {
     "describe": {
       "columns": [],
@@ -79,21 +95,6 @@
       }
     },
     "query": "SELECT id, label, mom_id FROM queue WHERE label = $1"
-  },
-  "a0f46c783675308719e341d6bdc983645403ec1542bfb4b6a25017e17b43b38a": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Varchar",
-          "Int4",
-          "Bool"
-        ]
-      }
-    },
-    "query": "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4"
   },
   "aa562058ae7ef7e6c53588f537b44a7d21f11c1821e5c430970ed1e5f55304af": {
     "describe": {

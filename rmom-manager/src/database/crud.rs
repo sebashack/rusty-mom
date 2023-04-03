@@ -72,11 +72,12 @@ pub async fn insert_mom(
     is_up: bool,
 ) {
     sqlx::query!(
-        "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4",
+        "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4, updated_at = $5",
         id,
         host,
         port,
         is_up,
+        sql_timestamp(),
     )
     .execute(conn)
     .await
