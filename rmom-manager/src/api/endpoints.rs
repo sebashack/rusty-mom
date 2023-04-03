@@ -1,22 +1,11 @@
-use futures::lock::Mutex;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
-use std::collections::HashMap;
-use std::sync::Arc;
 
-use crate::client::endpoints::Client;
-
-pub struct RegisteredMoM {
-    pub connection: Option<Client>,
-    pub host: String,
-    pub port: i32,
-}
-
-pub struct RegisteredMoMs {
-    pub moms: Arc<Mutex<HashMap<(String, i32), RegisteredMoM>>>,
-}
+use crate::api::mom::RegisteredMoMs;
+use crate::database::connection::DbConnection;
+use crate::database::crud;
 
 // TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
 const HARCODED_HOST: &str = "127.0.0.1";
@@ -68,20 +57,9 @@ async fn delete_queue(
 }
 
 #[get("/queues")]
-async fn get_queues(state: &State<RegisteredMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
-
-    let response = client.list_queues().await;
-    match response {
-        Ok(queues) => Ok(Json(queues)),
-        Err(err) => Err((Status::BadRequest, err)),
-    }
+async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
+    let records = crud::select_all_queues(&mut db).await;
+    Json(records.into_iter().map(|q| q.label).collect())
 }
 
 #[get("/channels")]

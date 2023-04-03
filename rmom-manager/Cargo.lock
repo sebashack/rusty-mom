@@ -1403,6 +1403,7 @@ dependencies = [
  "futures-lite",
  "log",
  "prost",
+ "rand",
  "rocket",
  "rocket_db_pools",
  "serde",

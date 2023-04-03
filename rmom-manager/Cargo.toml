@@ -19,6 +19,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 sqlx = { version = "0.6.3", default-features = false, features = ["macros", "postgres", "offline", "migrate", "uuid", "time", "bigdecimal"] }
 time = { version = "0.3.19", features = ["serde"] }
 tonic = "0.8.3"
+rand = "0.8.5"
 
 [build-dependencies]
 tonic-build = "0.8.4"

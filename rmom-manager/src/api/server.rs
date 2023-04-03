@@ -1,4 +1,3 @@
-use futures::lock::Mutex;
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::Deserialize;
@@ -6,9 +5,9 @@ use rocket::tokio::{task, time};
 use rocket::{Build, Request, Rocket};
 use rocket_db_pools::Database;
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use super::endpoints::{endpoints, RegisteredMoM, RegisteredMoMs};
+use super::endpoints::endpoints;
+use crate::api::mom::{RegisteredMoM, RegisteredMoMs};
 use crate::client::endpoints::Client;
 use crate::database::connection::Db;
 use crate::database::crud;
@@ -98,12 +97,10 @@ pub async fn build_server() -> Rocket<Build> {
                 moms.insert((c.host.clone(), c.port), mom);
 
                 let mom_id = sqlx::types::uuid::Uuid::new_v4();
-                crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port as i32, is_up).await;
+                crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port, is_up).await;
             }
 
-            rocket.manage(RegisteredMoMs {
-                moms: Arc::new(Mutex::new(moms)),
-            })
+            rocket.manage(RegisteredMoMs::new(moms))
         }))
         .attach(AdHoc::on_ignite("Manager thread", |rocket| async {
             let db = Db::fetch(&rocket).unwrap().0.clone();
