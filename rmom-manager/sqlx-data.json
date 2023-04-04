@@ -60,17 +60,38 @@
     },
     "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
   },
-  "23b09a9fad7137cd5e946593eb048e780ad0d9b3790cbd57c114639e2a8eab1a": {
+  "4597bdd5c527e839776183ad9c45314e2349a088f3ce77a8e394edcec5fd8f06": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
       "parameters": {
         "Left": [
-          "Uuid"
+          "Text",
+          "Int4"
         ]
       }
     },
-    "query": "DELETE FROM channel WHERE id = $1"
+    "query": "SELECT queue.id, label, mom_id FROM queue INNER JOIN mom as m ON queue.mom_id = m.id WHERE m.host = $1 AND m.port = $2"
   },
   "46a2b54294dfd88ff5b7abbf0f02fcdb1dae4542e98761973577b92bbbe25bad": {
     "describe": {

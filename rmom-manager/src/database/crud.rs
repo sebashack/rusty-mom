@@ -91,6 +91,22 @@ pub async fn select_all_topics_by_queue_label(
     .unwrap()
 }
 
+pub async fn select_queues_by_mom(
+    conn: &mut PoolConnectionPtr,
+    host: &str,
+    port: i32,
+) -> Vec<QueueRecord> {
+    sqlx::query_as!(
+        QueueRecord,
+        "SELECT queue.id, label, mom_id FROM queue INNER JOIN mom as m ON queue.mom_id = m.id WHERE m.host = $1 AND m.port = $2",
+        host,
+        port
+    )
+    .fetch_all(conn)
+    .await
+    .unwrap()
+}
+
 pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Option<QueueRecord> {
     sqlx::query_as!(
         QueueRecord,
