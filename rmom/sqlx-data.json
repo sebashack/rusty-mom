@@ -1,0 +1,18 @@
+{
+  "db": "PostgreSQL",
+  "989cd441d7054041e83e7e24a0b645742995725d5fc0f065c92d387faec793ec": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO message (id, queue_id, topic, ttl) VALUES ($1, $2, $3, $4)"
+  }
+}
