@@ -24,6 +24,7 @@ pub struct ChannelInfo {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct QueueInfo {
+    pub label: String,
     pub host: String,
     pub port: i32,
 }
@@ -55,7 +56,7 @@ async fn post_queue(
     }
 }
 
-// TODO: On deleting queues we also have to delete channels and messages
+// TODO: On deleting queues we also have messages
 #[delete("/queues/<label>")]
 async fn delete_queue(
     mut db: DbConnection,
@@ -184,21 +185,21 @@ async fn put_channel(
     }
 }
 
-#[get("/topics")]
-async fn get_topics(mut db: DbConnection) -> Result<Json<Vec<String>>, (Status, String)> {
+#[get("/queue/<queue_label>/topics")]
+async fn get_queue_topics(mut db: DbConnection, queue_label: String) -> Result<Json<Vec<String>>, (Status, String)> {
     unimplemented!()
 }
 
 pub fn endpoints() -> Vec<Route> {
     routes![
-        post_queue,
-        delete_queue,
-        put_channel,
-        get_queues,
-        get_channels,
         delete_channel,
-        get_queue_info,
+        delete_queue,
         get_channel_info,
-        get_topics,
+        get_channels,
+        get_queue_info,
+        get_queue_topics,
+        get_queues,
+        post_queue,
+        put_channel,
     ]
 }
