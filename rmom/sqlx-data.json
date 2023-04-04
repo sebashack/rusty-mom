@@ -1,18 +1,19 @@
 {
   "db": "PostgreSQL",
-  "989cd441d7054041e83e7e24a0b645742995725d5fc0f065c92d387faec793ec": {
+  "13d5b1c3a725c1608ad20705c5925482ca0cebb0c5462f1c051c471457e7e625": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
           "Uuid",
-          "Uuid",
           "Varchar",
-          "Int4"
+          "Varchar",
+          "Int4",
+          "Bytea"
         ]
       }
     },
-    "query": "INSERT INTO message (id, queue_id, topic, ttl) VALUES ($1, $2, $3, $4)"
+    "query": "INSERT INTO message (id, queue_label, topic, ttl, content) VALUES ($1, $2, $3, $4, $5)"
   }
 }

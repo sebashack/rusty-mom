@@ -1,9 +1,10 @@
 CREATE TABLE message (
     id            UUID PRIMARY KEY,
-    queue_id      UUID NOT NULL,
+    queue_label   VARCHAR(255) NOT NULL,
     topic         VARCHAR(255) NOT NULL,
     ttl           INTEGER NOT NULL,
+    content       BYTEA NOT NULL,
     created_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
     updated_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
-    CONSTRAINT    fk_queue FOREIGN KEY(queue_id) REFERENCES queue(id) ON DELETE CASCADE
+    CONSTRAINT    fk_queue FOREIGN KEY(queue_label) REFERENCES queue(label) ON DELETE CASCADE
 );

@@ -14,12 +14,12 @@ impl DbPool {
         host: &str,
         port: u16,
         user: &str,
-        db: &str,
+        dbname: &str,
         password: &str,
         min_conns: u32,
         max_conns: u32,
     ) -> Self {
-        let conn_str = format!("postgresql://{user}:{password}@{host}:{port}/{db}");
+        let conn_str = format!("postgresql://{user}:{password}@{host}:{port}/{dbname}");
         let pool = PgPoolOptions::new()
             .max_connections(max_conns)
             .min_connections(min_conns)

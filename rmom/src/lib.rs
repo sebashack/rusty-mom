@@ -3,3 +3,4 @@ pub mod messages {
 }
 pub mod broadcast;
 pub mod database;
+pub mod opts;

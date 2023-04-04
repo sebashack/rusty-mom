@@ -1,3 +1,5 @@
+use crate::database::connection::DbPool;
+use crate::opts::DbOpts;
 use futures_lite::stream::{Stream, StreamExt};
 use log::info;
 use std::collections::HashMap;
@@ -8,6 +10,7 @@ use tonic::{transport::Server, Code, Request, Response, Status};
 use uuid::Uuid;
 
 use super::queue::{BroadcastEnd, ChannelId, ChannelReceiver, Queue, QueueLabel};
+use crate::database::crud;
 use crate::messages::message_stream_server::{MessageStream, MessageStreamServer};
 use crate::messages::{
     CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
@@ -24,6 +27,8 @@ pub struct StreamServer {
     channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
     buffer_size: usize,
+    message_ttl: i32,
+    db_pool: DbPool,
 }
 
 #[tonic::async_trait]
@@ -71,10 +76,22 @@ impl MessageStream for StreamServer {
         let push = push.into_inner();
         info!("Request to PUSH");
 
+        let message_id = Uuid::new_v4();
+        let mut conn = self.db_pool.acquire().await;
+        crud::insert_message(
+            &mut conn,
+            &message_id,
+            &push.queue_label,
+            &push.topic,
+            self.message_ttl,
+            push.content.clone(),
+        )
+        .await;
+
         let lock = self.broadcast_ends.lock().unwrap();
         if let Some((_, broadcast_end)) = lock.get(&push.queue_label) {
             let message = Message {
-                id: Uuid::new_v4().to_string(),
+                id: message_id.to_string(),
                 content: push.content,
                 topic: push.topic.to_lowercase(),
             };
@@ -225,9 +242,25 @@ impl MessageStream for StreamServer {
 }
 
 impl StreamServer {
-    pub fn new(host: String, port: u16, buffer_size: usize) -> Self {
+    pub async fn new(
+        host: String,
+        port: u16,
+        buffer_size: usize,
+        message_ttl: i32,
+        db_opts: &DbOpts,
+    ) -> Self {
         let channel_receivers = Arc::new(Mutex::new(HashMap::new()));
         let broadcast_ends = Arc::new(Mutex::new(HashMap::new()));
+        let db_pool = DbPool::new(
+            &db_opts.host,
+            db_opts.port,
+            &db_opts.user,
+            &db_opts.dbname,
+            &db_opts.password,
+            db_opts.min_connections,
+            db_opts.max_connections,
+        )
+        .await;
 
         StreamServer {
             host,
@@ -235,6 +268,8 @@ impl StreamServer {
             channel_receivers,
             broadcast_ends,
             buffer_size,
+            db_pool,
+            message_ttl,
         }
     }
 
