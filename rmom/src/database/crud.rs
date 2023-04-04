@@ -5,6 +5,14 @@ use time::Duration;
 
 use super::connection::PoolConnectionPtr;
 
+#[derive(Debug)]
+pub struct MessageRecord {
+    pub id: Uuid,
+    pub queue_label: String,
+    pub topic: String,
+    pub content: Vec<u8>,
+}
+
 pub async fn insert_message(
     conn: &mut PoolConnectionPtr,
     id: &Uuid,
@@ -25,6 +33,20 @@ pub async fn insert_message(
     .execute(conn)
     .await
     .unwrap();
+}
+
+pub async fn select_queue_non_expired_messages(
+    conn: &mut PoolConnectionPtr,
+    queue_label: &str,
+) -> Vec<MessageRecord> {
+    sqlx::query_as!(
+        MessageRecord,
+        "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at < now()",
+        queue_label,
+    )
+    .fetch_all(conn)
+    .await
+    .unwrap()
 }
 
 // Helpers
