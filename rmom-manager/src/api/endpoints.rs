@@ -94,29 +94,18 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
     Json(records.into_iter().map(|q| q.label).collect())
 }
 
+#[get("/channels")]
+async fn get_channels(mut db: DbConnection) -> Json<Vec<Uuid>> {
+    let records = crud::select_all_channels(&mut db).await;
+    Json(records.into_iter().map(|c| c.id).collect())
+}
+
 #[get("/queues/<queue_id>")]
 async fn get_queue_info(
     mut db: DbConnection,
     queue_id: Uuid,
 ) -> Result<Json<QueueInfo>, (Status, String)> {
     unimplemented!()
-}
-
-#[get("/channels")]
-async fn get_channels(state: &State<AvailableMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
-
-    let response = client.list_channels().await;
-    match response {
-        Ok(queues) => Ok(Json(queues)),
-        Err(err) => Err((Status::BadRequest, err)),
-    }
 }
 
 #[get("/channels/<channel_id>")]
@@ -135,29 +124,36 @@ async fn delete_channel(
 ) -> Result<(), (Status, String)> {
     let id = Uuid::parse_str(channel_id).unwrap();
     if let Some(channel_record) = crud::select_channel(&mut db, &id).await {
-        if let Some(queue_record) = crud::select_queue_by_id(&mut db, &channel_record.queue_id).await {
+        if let Some(queue_record) =
+            crud::select_queue_by_id(&mut db, &channel_record.queue_id).await
+        {
             if queue_record.mom_id.is_none() {
                 return Err((Status::NotFound, "MoM not available".to_string()));
             }
 
-            if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
+            if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await
+            {
                 let key = (mom_record.host, mom_record.port);
                 let mut lock = state.moms.lock().await;
-                let client = lock
-                    .get_mut(&key)
-                    .unwrap()
-                    .connection
-                    .as_mut()
-                    .unwrap();
-            
+                let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+
                 crud::delete_channel(&mut db, &id);
                 match client.delete_channel(channel_id).await {
                     Ok(_) => Ok(()),
                     Err(err) => Err((Status::BadRequest, err)),
                 }
-            } else { Err((Status::InternalServerError, "MoM not available".to_string())) }
-        } else { Err((Status::InternalServerError, "Queue not available".to_string())) }
-    } else { Err((Status::NotFound, "Channel not found".to_string())) }
+            } else {
+                Err((Status::InternalServerError, "MoM not available".to_string()))
+            }
+        } else {
+            Err((
+                Status::InternalServerError,
+                "Queue not available".to_string(),
+            ))
+        }
+    } else {
+        Err((Status::NotFound, "Channel not found".to_string()))
+    }
 }
 
 #[put("/queues/<label>/channels/<topic>", format = "json")]
@@ -203,7 +199,10 @@ async fn put_channel(
 }
 
 #[get("/queue/<queue_label>/topics")]
-async fn get_queue_topics(mut db: DbConnection, queue_label: String) -> Result<Json<Vec<String>>, (Status, String)> {
+async fn get_queue_topics(
+    mut db: DbConnection,
+    queue_label: String,
+) -> Result<Json<Vec<String>>, (Status, String)> {
     unimplemented!()
 }
 

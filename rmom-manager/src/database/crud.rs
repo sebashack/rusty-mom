@@ -41,7 +41,17 @@ pub async fn select_all_queues(conn: &mut PoolConnectionPtr) -> Vec<QueueRecord>
         .unwrap()
 }
 
-pub async fn select_channel(conn: &mut PoolConnectionPtr, channel_id: &Uuid) -> Option<ChannelRecord> {
+pub async fn select_all_channels(conn: &mut PoolConnectionPtr) -> Vec<ChannelRecord> {
+    sqlx::query_as!(ChannelRecord, "SELECT id, queue_id, topic FROM channel")
+        .fetch_all(conn)
+        .await
+        .unwrap()
+}
+
+pub async fn select_channel(
+    conn: &mut PoolConnectionPtr,
+    channel_id: &Uuid,
+) -> Option<ChannelRecord> {
     sqlx::query_as!(
         ChannelRecord,
         "SELECT id, queue_id, topic FROM channel WHERE id = $1",
@@ -63,7 +73,10 @@ pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Op
     .unwrap()
 }
 
-pub async fn select_queue_by_id(conn: &mut PoolConnectionPtr, queue_id: &Uuid) -> Option<QueueRecord> {
+pub async fn select_queue_by_id(
+    conn: &mut PoolConnectionPtr,
+    queue_id: &Uuid,
+) -> Option<QueueRecord> {
     sqlx::query_as!(
         QueueRecord,
         "SELECT id, label, mom_id FROM queue WHERE id = $1",
@@ -183,7 +196,7 @@ pub async fn delete_queue(conn: &mut PoolConnectionPtr, id: &Uuid) {
 
 pub async fn delete_channel(conn: &mut PoolConnectionPtr, id: &Uuid) {
     sqlx::query!("DELETE FROM channel WHERE id = $1", id)
-    .execute(conn)
-    .await
-    .unwrap();
+        .execute(conn)
+        .await
+        .unwrap();
 }

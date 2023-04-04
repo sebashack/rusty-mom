@@ -154,6 +154,36 @@
     },
     "query": "SELECT id FROM queue WHERE label = $1"
   },
+  "81b6d04ee68deebf8e1d65aa3766ecf8ab3cc20b668caff28b7898247eb21540": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "queue_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, queue_id, topic FROM channel"
+  },
   "88d4d865c1c8119c8a07439d96a6c82c4878f0e06cece040af30ec1bd6cfc709": {
     "describe": {
       "columns": [
