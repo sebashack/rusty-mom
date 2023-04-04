@@ -7,7 +7,7 @@ pub struct Opts {
     pub host: String,
     pub port: u16,
     pub queue_buffer_size: usize,
-    pub message_ttl: i32,
+    pub message_ttl: i64,
     pub database: DbOpts,
 }
 

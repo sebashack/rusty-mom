@@ -27,7 +27,7 @@ pub struct StreamServer {
     channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
     buffer_size: usize,
-    message_ttl: i32,
+    message_ttl: i64,
     db_pool: DbPool,
 }
 
@@ -246,7 +246,7 @@ impl StreamServer {
         host: String,
         port: u16,
         buffer_size: usize,
-        message_ttl: i32,
+        message_ttl: i64,
         db_opts: &DbOpts,
     ) -> Self {
         let channel_receivers = Arc::new(Mutex::new(HashMap::new()));
