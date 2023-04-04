@@ -1,5 +1,19 @@
 {
   "db": "PostgreSQL",
+  "1aa72559a6b02265272d62daacc654889690e4dff66510c6eda3f88b17b5e1ff": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)"
+  },
   "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
     "describe": {
       "columns": [],

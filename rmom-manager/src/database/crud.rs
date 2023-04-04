@@ -117,6 +117,18 @@ pub async fn insert_queue(
     .unwrap();
 }
 
+pub async fn insert_channel(conn: &mut PoolConnectionPtr, id: &Uuid, queue_id: &Uuid, topic: &str) {
+    sqlx::query!(
+        "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)",
+        id,
+        queue_id,
+        topic,
+    )
+    .execute(conn)
+    .await
+    .unwrap();
+}
+
 pub async fn update_queue_mom(
     conn: &mut PoolConnectionPtr,
     queue_id: &sqlx::types::uuid::Uuid,

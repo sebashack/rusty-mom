@@ -56,7 +56,7 @@ async fn delete_queue(
 ) -> Result<(), (Status, String)> {
     if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
         if queue_record.mom_id.is_none() {
-            return Err((Status::NotFound, "Queue not found".to_string()));
+            return Err((Status::NotFound, "MoM not available".to_string()));
         }
 
         if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
@@ -124,26 +124,39 @@ async fn delete_channel(
 
 #[put("/queues/<label>/channels/<topic>", format = "json")]
 async fn put_channel(
+    mut db: DbConnection,
     state: &State<AvailableMoMs>,
     label: String,
     topic: String,
 ) -> Result<Json<ConnectionInfo>, (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
+    if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
+        if queue_record.mom_id.is_none() {
+            return Err((Status::NotFound, "MoM not available".to_string()));
+        }
 
-    let response = client.create_channel(label.as_str(), topic.as_str()).await;
-    match response {
-        Ok(channel_id) => Ok(Json(ConnectionInfo {
-            id: channel_id,
-            host: HARCODED_HOST.to_string(),
-            port: HARCODED_PORT,
-        })),
-        Err(err) => Err((Status::BadRequest, err)),
+        if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
+            let key = (mom_record.host.clone(), mom_record.port);
+            let mut lock = state.moms.lock().await;
+            let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+
+            match client.create_channel(label.as_str(), topic.as_str()).await {
+                Ok(channel_id) => {
+                    let chan_uuid = Uuid::parse_str(channel_id.as_str()).unwrap();
+                    crud::insert_channel(&mut db, &chan_uuid, &queue_record.id, topic.as_str())
+                        .await;
+                    Ok(Json(ConnectionInfo {
+                        id: channel_id,
+                        host: mom_record.host,
+                        port: mom_record.port,
+                    }))
+                }
+                Err(err) => Err((Status::BadRequest, err)),
+            }
+        } else {
+            Err((Status::InternalServerError, "MoM not available".to_string()))
+        }
+    } else {
+        Err((Status::NotFound, "Queue not found".to_string()))
     }
 }
 
