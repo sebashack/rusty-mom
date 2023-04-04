@@ -15,8 +15,9 @@ use crate::messages::message_stream_server::{MessageStream, MessageStreamServer}
 use crate::messages::{
     CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
     DeleteChannelOkResponse, DeleteChannelRequest, DeleteQueueOkResponse, DeleteQueueRequest,
-    ListChannelsRequest, ListChannelsResponse, ListQueuesRequest, ListQueuesResponse, Message,
-    Push, PushOkResponse, RebuildQueueOkResponse, RebuildQueueRequest, SubscriptionRequest,
+    HeartbeatOkResponse, HeartbeatRequest, ListChannelsRequest, ListChannelsResponse,
+    ListQueuesRequest, ListQueuesResponse, Message, Push, PushOkResponse, RebuildQueueOkResponse,
+    RebuildQueueRequest, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -34,6 +35,14 @@ pub struct StreamServer {
 #[tonic::async_trait]
 impl MessageStream for StreamServer {
     type SubscribeToChannelStream = ChannelStream;
+
+    async fn get_heartbeat(
+        &self,
+        _request: Request<HeartbeatRequest>,
+    ) -> Result<Response<HeartbeatOkResponse>, Status> {
+        info!("HEARTBEAT request");
+        Ok(Response::new(HeartbeatOkResponse {}))
+    }
 
     async fn subscribe_to_channel(
         &self,

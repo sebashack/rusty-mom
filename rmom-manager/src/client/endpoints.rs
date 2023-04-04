@@ -1,9 +1,10 @@
 use tonic::transport::Channel;
+use tonic::Code;
 
 use crate::messages::message_stream_client::MessageStreamClient;
 use crate::messages::{
     CreateChannelRequest, CreateQueueRequest, DeleteChannelRequest, DeleteQueueRequest,
-    ListChannelsRequest, ListQueuesRequest, RebuildQueueRequest,
+    HeartbeatRequest, ListChannelsRequest, ListQueuesRequest, RebuildQueueRequest,
 };
 
 pub struct Client {
@@ -18,6 +19,14 @@ impl Client {
         match MessageStreamClient::connect(addr).await {
             Ok(connection) => Some(Client { connection }),
             Err(_) => None,
+        }
+    }
+
+    pub async fn get_heartbeat(&mut self, queue_label: &str) -> Result<(), Code> {
+        let req = tonic::Request::new(HeartbeatRequest {});
+        match self.connection.get_heartbeat(req).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err.code()),
         }
     }
 

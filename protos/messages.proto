@@ -14,7 +14,12 @@ service MessageStream {
   rpc ListQueues (ListQueuesRequest) returns (ListQueuesResponse) {}
   rpc ListChannels (ListChannelsRequest) returns (ListChannelsResponse) {}
   rpc DeleteChannel (DeleteChannelRequest) returns (DeleteChannelOkResponse) {}
+  rpc GetHeartbeat (HeartbeatRequest) returns (HeartbeatOkResponse) {}
 }
+
+message HeartbeatRequest {}
+
+message HeartbeatOkResponse {}
 
 message SubscriptionRequest {
   string channel_id = 1;
