@@ -21,7 +21,7 @@ pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Se
 pub struct StreamServer {
     host: String,
     port: u16,
-    channel_receivers: Arc<Mutex<HashMap<ChannelId, ChannelReceiver>>>,
+    channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
     buffer_size: usize,
 }
@@ -41,7 +41,7 @@ impl MessageStream for StreamServer {
             let lock = self.channel_receivers.lock().unwrap();
             let chan_receiver = lock.get(&chan_id);
 
-            if let Some(chan_receiver) = chan_receiver {
+            if let Some((chan_receiver, _)) = chan_receiver {
                 let maybe_topic = chan_receiver.topic.clone();
                 let stream = chan_receiver.receiver.clone().filter(move |msg| {
                     if let Some(chan_topic) = &maybe_topic {
@@ -109,7 +109,6 @@ impl MessageStream for StreamServer {
         }
     }
 
-    // TODO: We need to delete all of the channels related to this queue.
     async fn delete_queue(
         &self,
         request: Request<DeleteQueueRequest>,
@@ -117,8 +116,11 @@ impl MessageStream for StreamServer {
         let label = request.into_inner().queue_label.to_lowercase();
         info!("Request to DELETE queue with label: {}", label);
 
-        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+        let mut channels_lock = self.channel_receivers.lock().unwrap();
+        channels_lock.retain(|_, (_, q)| q == &label);
+        drop(channels_lock);
 
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
         match broadcast_ends.remove(&label) {
             Some(_) => {
                 info!("Queue with label: {} deleted succesfully", label);
@@ -179,7 +181,7 @@ impl MessageStream for StreamServer {
                 let channel = queue.duplicate_channel(maybe_topic);
                 let mut lock = self.channel_receivers.lock().unwrap();
                 let channel_id = channel.id.clone();
-                lock.insert(channel_id.clone(), channel);
+                lock.insert(channel_id.clone(), (channel, label.clone()));
                 info!("Channel {} created successfully", channel_id);
 
                 Ok(Response::new(CreateChannelResponse {

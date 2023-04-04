@@ -64,11 +64,9 @@ async fn delete_queue(
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
 
+            crud::delete_queue(&mut db, &queue_record.id).await;
             match client.delete_queue(label.as_str()).await {
-                Ok(_) => {
-                    crud::delete_queue(&mut db, &queue_record.id).await;
-                    Ok(())
-                }
+                Ok(_) => Ok(()),
                 Err(err) => Err((Status::BadRequest, err)),
             }
         } else {
