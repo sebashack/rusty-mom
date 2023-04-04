@@ -1,7 +1,7 @@
 use crate::database::connection::DbPool;
 use crate::opts::DbOpts;
 use futures_lite::stream::{Stream, StreamExt};
-use log::info;
+use log::{info, warn};
 use std::collections::HashMap;
 use std::net::ToSocketAddrs;
 use std::pin::Pin;
@@ -16,7 +16,7 @@ use crate::messages::{
     CreateChannelRequest, CreateChannelResponse, CreateQueueOkResponse, CreateQueueRequest,
     DeleteChannelOkResponse, DeleteChannelRequest, DeleteQueueOkResponse, DeleteQueueRequest,
     ListChannelsRequest, ListChannelsResponse, ListQueuesRequest, ListQueuesResponse, Message,
-    Push, PushOkResponse, SubscriptionRequest,
+    Push, PushOkResponse, RebuildQueueOkResponse, RebuildQueueRequest, SubscriptionRequest,
 };
 
 pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Send>>;
@@ -238,6 +238,45 @@ impl MessageStream for StreamServer {
         Ok(Response::new(ListChannelsResponse {
             channels: channel_ids,
         }))
+    }
+
+    async fn rebuild_queue(
+        &self,
+        request: Request<RebuildQueueRequest>,
+    ) -> Result<Response<RebuildQueueOkResponse>, Status> {
+        let request = request.into_inner();
+        let label = request.queue_label.to_lowercase();
+        let mut conn = self.db_pool.acquire().await;
+
+        info!("Request to REBUILD queue with label: {}", label);
+
+        let messages = crud::select_queue_non_expired_messages(&mut conn, &label)
+            .await
+            .into_iter()
+            .map(|m| Message {
+                id: m.id.to_string(),
+                content: m.content,
+                topic: m.topic,
+            });
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+        if broadcast_ends.contains_key(&label) {
+            Err(Status::new(Code::InvalidArgument, "Queue already exists"))
+        } else {
+            let queue = Queue::new(self.buffer_size, label.clone());
+            let broadcast_end = queue.get_broadcast_end();
+
+            for msg in messages {
+                if let Err(err) = broadcast_end.broadcast(msg) {
+                    warn!("Failed to broadcast recovered message: {err}")
+                }
+            }
+
+            broadcast_ends.insert(label.clone(), (queue, broadcast_end));
+
+            info!("Queue with label: {} rebuilt succesfully", label);
+            Ok(Response::new(RebuildQueueOkResponse {}))
+        }
     }
 }
 
