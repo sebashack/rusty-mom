@@ -7,10 +7,10 @@ use rocket_db_pools::Database;
 use std::collections::HashMap;
 
 use super::endpoints::endpoints;
-use crate::api::mom::{AvailableMoMs, RegisteredMoM};
 use crate::client::endpoints::Client;
 use crate::database::connection::Db;
 use crate::database::crud;
+use crate::manager::mom::{AvailableMoMs, RegisteredMoM};
 
 #[get("/status")]
 pub async fn status() -> &'static str {

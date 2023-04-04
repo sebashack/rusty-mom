@@ -3,9 +3,30 @@ use rocket::serde::json::Json;
 use rocket::serde::uuid::Uuid;
 use rocket::{Route, State};
 
-use crate::api::mom::AvailableMoMs;
 use crate::database::connection::DbConnection;
-use crate::database::crud::{self, ChannelInfo, QueueInfo};
+use crate::database::crud;
+use crate::manager::mom::AvailableMoMs;
+
+// TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
+const HARCODED_HOST: &str = "127.0.0.1";
+const HARCODED_PORT: i32 = 50051;
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct ChannelInfo {
+    pub id: String,
+    pub host: String,
+    pub topic: String,
+    pub port: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct QueueInfo {
+    pub label: String,
+    pub host: String,
+    pub port: i32,
+}
 
 #[post("/queues/<label>")]
 async fn post_queue(
