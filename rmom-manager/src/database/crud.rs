@@ -6,6 +6,13 @@ use super::connection::PoolConnectionPtr;
 use crate::utils::time::sql_timestamp;
 
 #[derive(Debug)]
+pub struct ChannelRecord {
+    pub id: Uuid,
+    pub queue_id: Uuid,
+    pub topic: String,
+}
+
+#[derive(Debug)]
 pub struct QueueRecord {
     pub id: Uuid,
     pub label: String,
@@ -34,11 +41,33 @@ pub async fn select_all_queues(conn: &mut PoolConnectionPtr) -> Vec<QueueRecord>
         .unwrap()
 }
 
+pub async fn select_channel(conn: &mut PoolConnectionPtr, channel_id: &Uuid) -> Option<ChannelRecord> {
+    sqlx::query_as!(
+        ChannelRecord,
+        "SELECT id, queue_id, topic FROM channel WHERE id = $1",
+        channel_id,
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
 pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Option<QueueRecord> {
     sqlx::query_as!(
         QueueRecord,
         "SELECT id, label, mom_id FROM queue WHERE label = $1",
         queue_label
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_queue_by_id(conn: &mut PoolConnectionPtr, queue_id: &Uuid) -> Option<QueueRecord> {
+    sqlx::query_as!(
+        QueueRecord,
+        "SELECT id, label, mom_id FROM queue WHERE id = $1",
+        queue_id
     )
     .fetch_optional(conn)
     .await
@@ -146,8 +175,15 @@ pub async fn update_queue_mom(
 }
 
 pub async fn delete_queue(conn: &mut PoolConnectionPtr, id: &Uuid) {
-    sqlx::query!("DELETE FROM queue WHERE id = $1", id,)
+    sqlx::query!("DELETE FROM queue WHERE id = $1", id)
         .execute(conn)
         .await
         .unwrap();
+}
+
+pub async fn delete_channel(conn: &mut PoolConnectionPtr, id: &Uuid) {
+    sqlx::query!("DELETE FROM channel WHERE id = $1", id)
+    .execute(conn)
+    .await
+    .unwrap();
 }

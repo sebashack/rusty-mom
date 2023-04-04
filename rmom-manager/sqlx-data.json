@@ -14,6 +14,38 @@
     },
     "query": "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)"
   },
+  "20b1cfb13f6bd2e09a875b29fd69daafb5b34d4bdcf3738a6e109486958b2776": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, label, mom_id FROM queue WHERE id = $1"
+  },
   "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
     "describe": {
       "columns": [],
@@ -27,6 +59,18 @@
       }
     },
     "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
+  },
+  "23b09a9fad7137cd5e946593eb048e780ad0d9b3790cbd57c114639e2a8eab1a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM channel WHERE id = $1"
   },
   "46a2b54294dfd88ff5b7abbf0f02fcdb1dae4542e98761973577b92bbbe25bad": {
     "describe": {
@@ -43,6 +87,38 @@
       }
     },
     "query": "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4, updated_at = $5"
+  },
+  "592d6804da37fca7ccafc569c174b161041ae0f5a1c0fb30f134c5c2fdca4dce": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "queue_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, queue_id, topic FROM channel WHERE id = $1"
   },
   "66d2a548605fe9cc16a541b6fcff45e74c02816b3b0b5b0cd1b09e4c482b405a": {
     "describe": {
