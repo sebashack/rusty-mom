@@ -1,0 +1,5 @@
+1) Reimplement delete_channel so that gets channel from DB if existent, and retrieves MoM given queue_id.
+2) Reimplement get_channels so that it gets channels from database.
+3) Implement get_channel_info: Here you should be able to retrieve a MoM given a channel_id. Please, do this on a single query with JOIN.
+4) Implement get_queue_info: Retrieve MoM given queue_id.
+5) Implement get_topics. Retrieve topic information from DB.

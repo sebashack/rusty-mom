@@ -14,8 +14,16 @@ const HARCODED_PORT: i32 = 50051;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
-pub struct ConnectionInfo {
+pub struct ChannelInfo {
     pub id: String,
+    pub host: String,
+    pub topic: String,
+    pub port: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct QueueInfo {
     pub host: String,
     pub port: i32,
 }
@@ -83,6 +91,14 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
     Json(records.into_iter().map(|q| q.label).collect())
 }
 
+#[get("/queues/<queue_id>")]
+async fn get_queue_info(
+    mut db: DbConnection,
+    queue_id: Uuid,
+) -> Result<Json<QueueInfo>, (Status, String)> {
+    unimplemented!()
+}
+
 #[get("/channels")]
 async fn get_channels(state: &State<AvailableMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
     let mut lock = state.moms.lock().await;
@@ -98,6 +114,14 @@ async fn get_channels(state: &State<AvailableMoMs>) -> Result<Json<Vec<String>>,
         Ok(queues) => Ok(Json(queues)),
         Err(err) => Err((Status::BadRequest, err)),
     }
+}
+
+#[get("/channels/<channel_id>")]
+async fn get_channel_info(
+    mut db: DbConnection,
+    channel_id: Uuid,
+) -> Result<Json<ChannelInfo>, (Status, String)> {
+    unimplemented!()
 }
 
 #[delete("/channels/<channel_id>")]
@@ -126,7 +150,7 @@ async fn put_channel(
     state: &State<AvailableMoMs>,
     label: String,
     topic: String,
-) -> Result<Json<ConnectionInfo>, (Status, String)> {
+) -> Result<Json<ChannelInfo>, (Status, String)> {
     if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
         if queue_record.mom_id.is_none() {
             return Err((Status::NotFound, "MoM not available".to_string()));
@@ -136,16 +160,18 @@ async fn put_channel(
             let key = (mom_record.host.clone(), mom_record.port);
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+            let topic = topic.to_lowercase();
 
             match client.create_channel(label.as_str(), topic.as_str()).await {
                 Ok(channel_id) => {
                     let chan_uuid = Uuid::parse_str(channel_id.as_str()).unwrap();
                     crud::insert_channel(&mut db, &chan_uuid, &queue_record.id, topic.as_str())
                         .await;
-                    Ok(Json(ConnectionInfo {
+                    Ok(Json(ChannelInfo {
                         id: channel_id,
                         host: mom_record.host,
                         port: mom_record.port,
+                        topic,
                     }))
                 }
                 Err(err) => Err((Status::BadRequest, err)),
@@ -158,6 +184,11 @@ async fn put_channel(
     }
 }
 
+#[get("/topics")]
+async fn get_topics(mut db: DbConnection) -> Result<Json<Vec<String>>, (Status, String)> {
+    unimplemented!()
+}
+
 pub fn endpoints() -> Vec<Route> {
     routes![
         post_queue,
@@ -165,6 +196,9 @@ pub fn endpoints() -> Vec<Route> {
         put_channel,
         get_queues,
         get_channels,
-        delete_channel
+        delete_channel,
+        get_queue_info,
+        get_channel_info,
+        get_topics,
     ]
 }

@@ -9,7 +9,7 @@ import messages_pb2_grpc
 
 
 MoMInfo = namedtuple("MoMInfo", ["host", "port"])
-Channel = namedtuple("Channel", ["id"])
+Channel = namedtuple("Channel", ["id", "topic"])
 
 
 class MoMClient:
@@ -41,7 +41,7 @@ class MoMClient:
             data = response.json()
             print(f"Response body: {data}")
 
-            return (MoMInfo(data["host"], data["port"]), Channel(data["id"]))
+            return (MoMInfo(data["host"], data["port"]), Channel(data["id"], data["topic"]))
         except:
             return None
 
