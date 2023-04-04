@@ -43,3 +43,11 @@ impl AvailableMoMs {
         }
     }
 }
+
+impl Clone for AvailableMoMs {
+    fn clone(&self) -> Self {
+        AvailableMoMs {
+            moms: Arc::clone(&self.moms),
+        }
+    }
+}
