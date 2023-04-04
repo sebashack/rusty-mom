@@ -35,6 +35,8 @@ async fn post_queue(
     state: &State<AvailableMoMs>,
     label: String,
 ) -> Result<(), (Status, String)> {
+    let label = label.to_lowercase();
+
     if crud::select_if_queue_exists(&mut db, label.as_str()).await {
         Err((Status::BadRequest, "Queue already exists".to_string()))
     } else {
@@ -152,6 +154,9 @@ async fn put_channel(
     label: String,
     topic: String,
 ) -> Result<Json<ChannelInfo>, (Status, String)> {
+    let topic = topic.to_lowercase();
+    let label = label.to_lowercase();
+
     if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
         if queue_record.mom_id.is_none() {
             return Err((Status::NotFound, "MoM not available".to_string()));
@@ -161,7 +166,6 @@ async fn put_channel(
             let key = (mom_record.host.clone(), mom_record.port);
             let mut lock = state.moms.lock().await;
             let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
-            let topic = topic.to_lowercase();
 
             match client.create_channel(label.as_str(), topic.as_str()).await {
                 Ok(channel_id) => {
