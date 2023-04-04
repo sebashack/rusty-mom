@@ -14,6 +14,7 @@
     },
     "query": "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)"
   },
+<<<<<<< HEAD
   "20b1cfb13f6bd2e09a875b29fd69daafb5b34d4bdcf3738a6e109486958b2776": {
     "describe": {
       "columns": [
@@ -47,18 +48,22 @@
     "query": "SELECT id, label, mom_id FROM queue WHERE id = $1"
   },
   "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
+=======
+  "243e3eb152a9390f3c92b04ed8b01ee745ac9f970765377ff536592e26c8c97a": {
+>>>>>>> af7e7ba (Introduce queue rebuilding and management)
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
-          "Uuid",
+          "Text",
+          "Int4",
           "Bool",
           "Timestamp"
         ]
       }
     },
-    "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
+    "query": "UPDATE mom SET is_up = $3, updated_at= $4 WHERE host = $1 AND port = $2"
   },
   "4597bdd5c527e839776183ad9c45314e2349a088f3ce77a8e394edcec5fd8f06": {
     "describe": {

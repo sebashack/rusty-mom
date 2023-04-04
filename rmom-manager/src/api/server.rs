@@ -4,13 +4,13 @@ use rocket::serde::Deserialize;
 use rocket::tokio::{task, time};
 use rocket::{Build, Request, Rocket};
 use rocket_db_pools::Database;
-use std::collections::HashMap;
 
 use super::endpoints::endpoints;
 use crate::client::endpoints::Client;
 use crate::database::connection::Db;
 use crate::database::crud;
 use crate::manager::mom::{AvailableMoMs, RegisteredMoM};
+use crate::manager::Manager;
 
 #[get("/status")]
 pub async fn status() -> &'static str {
@@ -81,9 +81,9 @@ pub async fn build_server() -> Rocket<Build> {
             ],
         )
         .attach(AdHoc::on_ignite("Manager thread", |rocket| async move {
-            let db = Db::fetch(&rocket).unwrap().clone();
-            let mut conn = db.acquire().await.unwrap();
-            let mut moms = HashMap::new();
+            let db_pool = Db::fetch(&rocket).unwrap();
+            let mut conn = db_pool.acquire().await.unwrap();
+            let mut moms = Vec::new();
 
             for c in mom_config.moms.iter() {
                 let client = Client::connect(c.host.clone(), c.port).await;
@@ -94,29 +94,16 @@ pub async fn build_server() -> Rocket<Build> {
                     port: c.port,
                 };
 
-                moms.insert((c.host.clone(), c.port), mom);
+                moms.push(((c.host.clone(), c.port), mom));
 
                 let mom_id = sqlx::types::uuid::Uuid::new_v4();
                 crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port, is_up).await;
             }
 
-            rocket.manage(AvailableMoMs::new(moms))
-        }))
-        .attach(AdHoc::on_ignite("Manager thread", |rocket| async {
-            let db = Db::fetch(&rocket).unwrap().0.clone();
-            task::spawn(async move {
-                loop {
-                    if let Ok(mut conn) = db.acquire().await {
-                        time::sleep(time::Duration::from_secs(3)).await;
-                        // TODO: Trigger mom management here
-                        let moms = crud::select_all_moms(&mut conn).await;
-                        println!("MoMs {:#?}", moms);
-                    } else {
-                        println!("Could not get DB lock");
-                    }
-                }
-            });
+            let available_moms = AvailableMoMs::new(moms);
+            let manager = Manager::new(available_moms.clone(), db_pool.0.clone());
+            task::spawn(async move { manager.run().await });
 
-            rocket
+            rocket.manage(available_moms)
         }))
 }

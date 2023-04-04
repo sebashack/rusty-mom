@@ -199,14 +199,11 @@ pub async fn insert_mom(
     .unwrap();
 }
 
-pub async fn update_mom_is_up(
-    conn: &mut PoolConnectionPtr,
-    mom_id: &sqlx::types::uuid::Uuid,
-    is_up: bool,
-) {
+pub async fn update_mom_is_up(conn: &mut PoolConnectionPtr, host: &str, port: i32, is_up: bool) {
     sqlx::query!(
-        "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1",
-        mom_id,
+        "UPDATE mom SET is_up = $3, updated_at= $4 WHERE host = $1 AND port = $2",
+        host,
+        port,
         is_up,
         sql_timestamp(),
     )

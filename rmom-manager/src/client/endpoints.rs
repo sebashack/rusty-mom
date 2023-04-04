@@ -22,7 +22,7 @@ impl Client {
         }
     }
 
-    pub async fn get_heartbeat(&mut self, queue_label: &str) -> Result<(), Code> {
+    pub async fn get_heartbeat(&mut self) -> Result<(), Code> {
         let req = tonic::Request::new(HeartbeatRequest {});
         match self.connection.get_heartbeat(req).await {
             Ok(_) => Ok(()),

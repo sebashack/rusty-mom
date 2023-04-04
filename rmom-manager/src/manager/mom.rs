@@ -1,9 +1,13 @@
 use crate::client::endpoints::Client;
-use futures::lock::Mutex;
+use futures::lock::{Mutex, MutexGuard};
+use log::info;
 use rand::prelude::IteratorRandom;
 use rocket::serde::uuid::Uuid;
+use rocket::tokio::{task, time};
+use std::collections::hash_map::Values;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tonic::Code;
 
 use crate::database::connection::PoolConnectionPtr;
 use crate::database::crud::{self, MoMRecord};
@@ -18,14 +22,88 @@ pub struct RegisteredMoM {
     pub port: i32,
 }
 
+pub enum ConnectionStatus {
+    Available,
+    Unavailable,
+    Restablished,
+}
+
+impl RegisteredMoM {
+    pub async fn probe_conn_status(
+        &mut self,
+        max_retries: u16,
+        delay_millis: u64,
+    ) -> ConnectionStatus {
+        match self.connection {
+            None => {
+                if let Some(client) = Client::connect(self.host.clone(), self.port).await {
+                    self.connection = Some(client);
+                    info!("Restablished MoM at {}:{}", self.host, self.port);
+                    ConnectionStatus::Restablished
+                } else {
+                    info!("Still Unvailable MoM at {}:{}", self.host, self.port);
+                    ConnectionStatus::Unavailable
+                }
+            }
+            Some(ref mut conn) => {
+                if RegisteredMoM::is_up_retry(conn, max_retries, delay_millis).await {
+                    ConnectionStatus::Available
+                } else {
+                    self.connection = None;
+                    info!(
+                        "Previously available MoM at {}:{} is now unavailable",
+                        self.host, self.port
+                    );
+                    ConnectionStatus::Unavailable
+                }
+            }
+        }
+    }
+
+    async fn is_up_retry(conn: &mut Client, max_retries: u16, delay_millis: u64) -> bool {
+        let mut i = 0;
+        while i < max_retries {
+            let response = conn.get_heartbeat().await;
+            match response {
+                Ok(_) => return true,
+                Err(code) => {
+                    if code != Code::Unavailable {
+                        return true;
+                    }
+                }
+            }
+
+            i += i;
+            time::sleep(time::Duration::from_millis(delay_millis)).await;
+        }
+
+        false
+    }
+}
+
 pub struct AvailableMoMs {
-    pub moms: Arc<Mutex<HashMap<Key, RegisteredMoM>>>,
+    moms: HashMap<Key, Arc<Mutex<RegisteredMoM>>>,
 }
 
 impl AvailableMoMs {
-    pub fn new(moms: HashMap<Key, RegisteredMoM>) -> Self {
-        AvailableMoMs {
-            moms: Arc::new(Mutex::new(moms)),
+    pub fn new(moms: Vec<(Key, RegisteredMoM)>) -> Self {
+        let mut locked_moms = HashMap::new();
+
+        for (k, v) in moms {
+            locked_moms.insert(k, Arc::new(Mutex::new(v)));
+        }
+
+        AvailableMoMs { moms: locked_moms }
+    }
+
+    pub fn get_value_iter(&self) -> Values<'_, (String, i32), Arc<Mutex<RegisteredMoM>>> {
+        self.moms.values()
+    }
+
+    pub async fn acquire(&self, key: &Key) -> Option<MutexGuard<'_, RegisteredMoM>> {
+        match self.moms.get(key) {
+            None => None,
+            Some(v) => Some(v.lock().await),
         }
     }
 
@@ -36,18 +114,18 @@ impl AvailableMoMs {
             .filter(|m| m.is_up)
             .choose(&mut rand::thread_rng());
 
-        if let Some(mom) = random_mom {
-            Some(((mom.host.clone(), mom.port), mom.id.clone()))
-        } else {
-            None
-        }
+        random_mom.map(|mom| ((mom.host.clone(), mom.port), mom.id))
     }
 }
 
 impl Clone for AvailableMoMs {
     fn clone(&self) -> Self {
-        AvailableMoMs {
-            moms: Arc::clone(&self.moms),
+        let mut locked_moms = HashMap::new();
+
+        for (k, v) in self.moms.iter() {
+            locked_moms.insert(k.clone(), Arc::clone(v));
         }
+
+        AvailableMoMs { moms: locked_moms }
     }
 }
