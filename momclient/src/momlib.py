@@ -74,7 +74,7 @@ class MoMClient:
         except:
             return None
 
-    def get_queue_topics(self, channel_id):
+    def get_queue_topics(self, queue_label):
         response = requests.get(f"{self.root()}/queue/{queue_label}/topics")
         print(f"Response Status: {response.status_code}")
 
@@ -86,7 +86,7 @@ class MoMClient:
         except:
             return None
 
-    def get_channels(self, channel_id):
+    def list_channels(self):
         response = requests.get(f"{self.root()}/channels")
         print(f"Response Status: {response.status_code}")
 

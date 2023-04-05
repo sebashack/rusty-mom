@@ -72,7 +72,7 @@ pub async fn select_all_topics_by_queue_label(
 ) -> Vec<TopicRecord> {
     sqlx::query_as!(
         TopicRecord,
-        "SELECT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1",
+        "SELECT DISTINCT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1 AND channel.topic != '__none__'",
         queue_label
     )
     .fetch_all(conn)

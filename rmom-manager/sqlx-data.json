@@ -1,25 +1,5 @@
 {
   "db": "PostgreSQL",
-  "130ac3e0097083450fe02ab01599565398a452fa17c8115d115aff161218da43": {
-    "describe": {
-      "columns": [
-        {
-          "name": "topic",
-          "ordinal": 0,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1"
-  },
   "1aa72559a6b02265272d62daacc654889690e4dff66510c6eda3f88b17b5e1ff": {
     "describe": {
       "columns": [],
@@ -267,6 +247,26 @@
       }
     },
     "query": "SELECT q.label, m.host, m.port FROM queue q INNER JOIN mom m ON q.mom_id = m.id WHERE q.label = $1"
+  },
+  "a1d32b81e81956c970fef07c5f210de6ec2bbf176939e9e068aa9236e06efac1": {
+    "describe": {
+      "columns": [
+        {
+          "name": "topic",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT DISTINCT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1 AND channel.topic != '__none__'"
   },
   "a42074132f37f8b3fb6da1d074d88dfb7433433fe26c05ac9024fc179a0a9da2": {
     "describe": {
