@@ -1,22 +1,6 @@
 {
   "db": "PostgreSQL",
-  "d421f39c6d4f8dc78578efd1c261330df2b75ad677860226175b4b9702b00bc3": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Varchar",
-          "Varchar",
-          "Timestamp",
-          "Bytea"
-        ]
-      }
-    },
-    "query": "INSERT INTO message (id, queue_label, topic, expires_at, content) VALUES ($1, $2, $3, $4, $5)"
-  },
-  "e75c2ae51fd43721360926288a68738cb17de08c5434849bb913a034264baf09": {
+  "35d9b42f684c04e8cabe4ceb52670eec8f83fd6ff0ae8409a69ed5da80c22fc4": {
     "describe": {
       "columns": [
         {
@@ -52,6 +36,22 @@
         ]
       }
     },
-    "query": "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at < now() ORDER BY created_at DESC"
+    "query": "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at < now() ORDER BY created_at ASC"
+  },
+  "d421f39c6d4f8dc78578efd1c261330df2b75ad677860226175b4b9702b00bc3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamp",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "INSERT INTO message (id, queue_label, topic, expires_at, content) VALUES ($1, $2, $3, $4, $5)"
   }
 }

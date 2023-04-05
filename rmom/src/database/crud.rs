@@ -41,7 +41,7 @@ pub async fn select_queue_non_expired_messages(
 ) -> Vec<MessageRecord> {
     sqlx::query_as!(
         MessageRecord,
-        "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at < now() ORDER BY created_at DESC",
+        "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at < now() ORDER BY created_at ASC",
         queue_label,
     )
     .fetch_all(conn)
