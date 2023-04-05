@@ -5,6 +5,9 @@ use super::connection::PoolConnectionPtr;
 
 use crate::utils::time::sql_timestamp;
 
+pub struct TopicRecord {
+    pub topic: String,
+}
 #[derive(Debug)]
 pub struct ChannelRecord {
     pub id: Uuid,
@@ -58,6 +61,20 @@ pub async fn select_channel(
         channel_id,
     )
     .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_all_topics_by_queue_label(
+    conn: &mut PoolConnectionPtr,
+    queue_label: &str,
+) -> Vec<TopicRecord> {
+    sqlx::query_as!(
+        TopicRecord,
+        "SELECT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1",
+        queue_label
+    )
+    .fetch_all(conn)
     .await
     .unwrap()
 }

@@ -94,6 +94,12 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
     Json(records.into_iter().map(|q| q.label).collect())
 }
 
+#[get("/queue/<queue_label>/topics")]
+async fn get_queue_topics(mut db: DbConnection, queue_label: &str) -> Json<Vec<String>> {
+    let records = crud::select_all_topics_by_queue_label(&mut db, queue_label).await;
+    Json(records.into_iter().map(|t| t.topic).collect())
+}
+
 #[get("/channels")]
 async fn get_channels(mut db: DbConnection) -> Json<Vec<Uuid>> {
     let records = crud::select_all_channels(&mut db).await;
@@ -137,7 +143,7 @@ async fn delete_channel(
                 let mut lock = state.moms.lock().await;
                 let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
 
-                crud::delete_channel(&mut db, &id);
+                crud::delete_channel(&mut db, &id).await;
                 match client.delete_channel(channel_id).await {
                     Ok(_) => Ok(()),
                     Err(err) => Err((Status::BadRequest, err)),
@@ -196,14 +202,6 @@ async fn put_channel(
     } else {
         Err((Status::NotFound, "Queue not found".to_string()))
     }
-}
-
-#[get("/queue/<queue_label>/topics")]
-async fn get_queue_topics(
-    mut db: DbConnection,
-    queue_label: String,
-) -> Result<Json<Vec<String>>, (Status, String)> {
-    unimplemented!()
 }
 
 pub fn endpoints() -> Vec<Route> {

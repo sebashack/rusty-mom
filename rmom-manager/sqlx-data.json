@@ -1,5 +1,25 @@
 {
   "db": "PostgreSQL",
+  "130ac3e0097083450fe02ab01599565398a452fa17c8115d115aff161218da43": {
+    "describe": {
+      "columns": [
+        {
+          "name": "topic",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1"
+  },
   "1aa72559a6b02265272d62daacc654889690e4dff66510c6eda3f88b17b5e1ff": {
     "describe": {
       "columns": [],
