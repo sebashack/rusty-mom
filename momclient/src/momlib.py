@@ -62,8 +62,8 @@ class MoMClient:
         except:
             return None
 
-    def get_queue_info(self, channel_id):
-        response = requests.get(f"{self.root()}/queues/{queue_id}")
+    def get_queue_info(self, queue_label):
+        response = requests.get(f"{self.root()}/queues/{queue_label}")
         print(f"Response Status: {response.status_code}")
 
         try:

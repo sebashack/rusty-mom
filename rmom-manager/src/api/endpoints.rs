@@ -130,10 +130,10 @@ async fn get_channel_info(
 async fn delete_channel(
     mut db: DbConnection,
     state: &State<AvailableMoMs>,
-    channel_id: &str,
+    channel_id: String,
 ) -> Result<(), (Status, String)> {
-    let id = Uuid::parse_str(channel_id).unwrap();
-    if let Some(channel_record) = crud::select_channel(&mut db, &id).await {
+    let chan_uuid = Uuid::parse_str(channel_id.as_str()).unwrap();
+    if let Some(channel_record) = crud::select_channel(&mut db, &chan_uuid).await {
         if let Some(queue_record) =
             crud::select_queue_by_id(&mut db, &channel_record.queue_id).await
         {
@@ -147,8 +147,8 @@ async fn delete_channel(
                 let mut lock = state.moms.lock().await;
                 let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
 
-                crud::delete_channel(&mut db, &id).await;
-                match client.delete_channel(channel_id).await {
+                crud::delete_channel(&mut db, &chan_uuid).await;
+                match client.delete_channel(channel_id.as_str()).await {
                     Ok(_) => Ok(()),
                     Err(err) => Err((Status::BadRequest, err)),
                 }

@@ -63,7 +63,7 @@ impl Client {
         });
         match self.connection.delete_channel(req).await {
             Ok(_) => Ok(()),
-            Err(err) => Err(format!("Failed to delete queue: {}", err)),
+            Err(err) => Err(format!("Failed to delete channel: {}", err)),
         }
     }
 
