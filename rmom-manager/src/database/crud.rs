@@ -3,7 +3,7 @@ use sqlx::{self};
 
 use super::connection::PoolConnectionPtr;
 
-use crate::api::endpoints::{QueueInfo, ChannelInfo};
+use crate::api::endpoints::{ChannelInfo, QueueInfo};
 use crate::utils::time::sql_timestamp;
 
 pub struct TopicRecord {
@@ -102,7 +102,10 @@ pub async fn select_queue_info(conn: &mut PoolConnectionPtr, queue_id: &Uuid) ->
     .unwrap()
 }
 
-pub async fn select_channel_info(conn: &mut PoolConnectionPtr, channel_id: &Uuid) -> Option<ChannelInfo> {
+pub async fn select_channel_info(
+    conn: &mut PoolConnectionPtr,
+    channel_id: &Uuid,
+) -> Option<ChannelInfo> {
     sqlx::query_as!(
         ChannelInfo,
         "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1",

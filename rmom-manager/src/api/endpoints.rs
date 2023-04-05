@@ -8,10 +8,6 @@ use crate::api::mom::AvailableMoMs;
 use crate::database::connection::DbConnection;
 use crate::database::crud;
 
-// TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
-const HARCODED_HOST: &str = "127.0.0.1";
-const HARCODED_PORT: i32 = 50051;
-
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ChannelInfo {
