@@ -236,6 +236,44 @@
     },
     "query": "SELECT id, label, mom_id FROM queue WHERE label = $1"
   },
+  "a42074132f37f8b3fb6da1d074d88dfb7433433fe26c05ac9024fc179a0a9da2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1"
+  },
   "aa562058ae7ef7e6c53588f537b44a7d21f11c1821e5c430970ed1e5f55304af": {
     "describe": {
       "columns": [
@@ -271,6 +309,38 @@
       }
     },
     "query": "SELECT id, host, port, is_up FROM mom"
+  },
+  "b355fb7ef4b574aa845a10cf01cf7333e1f1654d78cd5b0e1f7bad2deb756120": {
+    "describe": {
+      "columns": [
+        {
+          "name": "label",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT q.label, m.host, m.port FROM queue q INNER JOIN mom m ON q.mom_id = m.id WHERE q.id = $1"
   },
   "b907bc49ec4a79ed69ee0a27a2e1c252b1f8a802896df0cb9ba1ae6d4c8c4fd6": {
     "describe": {

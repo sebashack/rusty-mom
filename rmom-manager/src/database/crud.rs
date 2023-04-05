@@ -3,6 +3,7 @@ use sqlx::{self};
 
 use super::connection::PoolConnectionPtr;
 
+use crate::api::endpoints::{QueueInfo, ChannelInfo};
 use crate::utils::time::sql_timestamp;
 
 pub struct TopicRecord {
@@ -88,6 +89,45 @@ pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Op
     .fetch_optional(conn)
     .await
     .unwrap()
+}
+
+pub async fn select_queue_info(conn: &mut PoolConnectionPtr, queue_id: &Uuid) -> Option<QueueInfo> {
+    sqlx::query_as!(
+        QueueInfo,
+        "SELECT q.label, m.host, m.port FROM queue q INNER JOIN mom m ON q.mom_id = m.id WHERE q.id = $1",
+        queue_id
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_channel_info(conn: &mut PoolConnectionPtr, channel_id: &Uuid) -> Option<ChannelInfo> {
+    struct ChannelQuery {
+        pub id: Uuid,
+        pub host: String,
+        pub topic: String,
+        pub port: i32,
+    }
+
+    let query_result = sqlx::query_as!(
+        ChannelQuery,
+        "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1",
+        channel_id
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap();
+
+    if let Some(channel) = query_result {
+        return Some(ChannelInfo{
+            id: channel.id.to_string(),
+            host: channel.host,
+            topic: channel.topic,
+            port: channel.port,
+        })
+    }
+    return None;
 }
 
 pub async fn select_queue_by_id(

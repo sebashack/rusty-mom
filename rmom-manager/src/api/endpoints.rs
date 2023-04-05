@@ -111,7 +111,11 @@ async fn get_queue_info(
     mut db: DbConnection,
     queue_id: Uuid,
 ) -> Result<Json<QueueInfo>, (Status, String)> {
-    unimplemented!()
+    if let Some(queue) = crud::select_queue_info(&mut db, &queue_id).await {
+        Ok(Json(queue))
+    } else {
+        Err((Status::NotFound, "Queue not found".to_string()))
+    }
 }
 
 #[get("/channels/<channel_id>")]
@@ -119,7 +123,11 @@ async fn get_channel_info(
     mut db: DbConnection,
     channel_id: Uuid,
 ) -> Result<Json<ChannelInfo>, (Status, String)> {
-    unimplemented!()
+    if let Some(channel) = crud::select_channel_info(&mut db, &channel_id).await {
+        Ok(Json(channel))
+    } else {
+        Err((Status::NotFound, "Channel not found".to_string()))
+    }
 }
 
 #[delete("/channels/<channel_id>")]
