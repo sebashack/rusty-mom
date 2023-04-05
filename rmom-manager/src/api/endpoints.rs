@@ -102,12 +102,12 @@ async fn get_channels(mut db: DbConnection) -> Json<Vec<Uuid>> {
     Json(records.into_iter().map(|c| c.id).collect())
 }
 
-#[get("/queues/<queue_id>")]
+#[get("/queues/<queue_label>")]
 async fn get_queue_info(
     mut db: DbConnection,
-    queue_id: Uuid,
+    queue_label: String,
 ) -> Result<Json<QueueInfo>, (Status, String)> {
-    if let Some(queue) = crud::select_queue_info(&mut db, &queue_id).await {
+    if let Some(queue) = crud::select_queue_info(&mut db, &queue_label).await {
         Ok(Json(queue))
     } else {
         Err((Status::NotFound, "Queue not found".to_string()))
