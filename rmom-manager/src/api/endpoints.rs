@@ -15,7 +15,7 @@ const HARCODED_PORT: i32 = 50051;
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ChannelInfo {
-    pub id: String,
+    pub id: Uuid,
     pub host: String,
     pub topic: String,
     pub port: i32,
@@ -196,7 +196,7 @@ async fn put_channel(
                     crud::insert_channel(&mut db, &chan_uuid, &queue_record.id, topic.as_str())
                         .await;
                     Ok(Json(ChannelInfo {
-                        id: channel_id,
+                        id: chan_uuid,
                         host: mom_record.host,
                         port: mom_record.port,
                         topic,

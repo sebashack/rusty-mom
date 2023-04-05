@@ -103,31 +103,14 @@ pub async fn select_queue_info(conn: &mut PoolConnectionPtr, queue_id: &Uuid) ->
 }
 
 pub async fn select_channel_info(conn: &mut PoolConnectionPtr, channel_id: &Uuid) -> Option<ChannelInfo> {
-    struct ChannelQuery {
-        pub id: Uuid,
-        pub host: String,
-        pub topic: String,
-        pub port: i32,
-    }
-
-    let query_result = sqlx::query_as!(
-        ChannelQuery,
+    sqlx::query_as!(
+        ChannelInfo,
         "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1",
         channel_id
     )
     .fetch_optional(conn)
     .await
-    .unwrap();
-
-    if let Some(channel) = query_result {
-        return Some(ChannelInfo{
-            id: channel.id.to_string(),
-            host: channel.host,
-            topic: channel.topic,
-            port: channel.port,
-        })
-    }
-    return None;
+    .unwrap()
 }
 
 pub async fn select_queue_by_id(
