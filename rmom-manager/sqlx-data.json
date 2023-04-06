@@ -412,6 +412,78 @@
     },
     "query": "SELECT id, label, mom_id FROM queue"
   },
+  "c9f0ef5ce5a6530ff6aa9f2f73fcede7b4e3a5ef96b970967ad04d4ed480c2b4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "is_up",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, host, port, is_up FROM mom WHERE is_up=false"
+  },
+  "ccae3111e90bbdc3497c1f6a43356f5ae8f2e9162e3e772c65fe37318db8f56f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "is_up",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, host, port, is_up FROM mom WHERE is_up=true"
+  },
   "da13ee985a8da43115b9232717b8ff1642fea7ea55ba936e5e9792f90248ff63": {
     "describe": {
       "columns": [

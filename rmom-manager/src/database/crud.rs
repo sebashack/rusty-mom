@@ -50,6 +50,26 @@ pub async fn select_all_moms(conn: &mut PoolConnectionPtr) -> Vec<MoMRecord> {
         .unwrap()
 }
 
+pub async fn select_down_moms(conn: &mut PoolConnectionPtr) -> Vec<MoMRecord> {
+    sqlx::query_as!(
+        MoMRecord,
+        "SELECT id, host, port, is_up FROM mom WHERE is_up=false"
+    )
+    .fetch_all(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_up_moms(conn: &mut PoolConnectionPtr) -> Vec<MoMRecord> {
+    sqlx::query_as!(
+        MoMRecord,
+        "SELECT id, host, port, is_up FROM mom WHERE is_up=true"
+    )
+    .fetch_all(conn)
+    .await
+    .unwrap()
+}
+
 pub async fn select_all_queues(conn: &mut PoolConnectionPtr) -> Vec<QueueRecord> {
     sqlx::query_as!(QueueRecord, "SELECT id, label, mom_id FROM queue")
         .fetch_all(conn)

@@ -125,11 +125,8 @@ impl AvailableMoMs {
     }
 
     pub async fn get_random_up_key(db: &mut PoolConnectionPtr) -> Option<(Key, Uuid)> {
-        let moms = crud::select_all_moms(db).await;
-        let random_mom: Option<&MoMRecord> = moms
-            .iter()
-            .filter(|m| m.is_up)
-            .choose(&mut rand::thread_rng());
+        let moms = crud::select_up_moms(db).await;
+        let random_mom: Option<&MoMRecord> = moms.iter().choose(&mut rand::thread_rng());
 
         random_mom.map(|mom| ((mom.host.clone(), mom.port), mom.id))
     }
