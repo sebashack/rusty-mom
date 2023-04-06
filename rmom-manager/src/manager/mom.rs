@@ -45,8 +45,8 @@ impl RegisteredMoM {
                     ConnectionStatus::Unavailable
                 }
             }
-            Some(ref mut conn) => {
-                if RegisteredMoM::is_up_retry(conn, max_retries, delay_millis).await {
+            Some(ref mut client) => {
+                if RegisteredMoM::is_up_retry(client, max_retries, delay_millis).await {
                     ConnectionStatus::Available
                 } else {
                     self.connection = None;
@@ -60,10 +60,10 @@ impl RegisteredMoM {
         }
     }
 
-    async fn is_up_retry(conn: &mut Client, max_retries: u16, delay_millis: u64) -> bool {
+    async fn is_up_retry(client: &mut Client, max_retries: u16, delay_millis: u64) -> bool {
         let mut i = 0;
         while i < max_retries {
-            let response = conn.get_heartbeat().await;
+            let response = client.get_heartbeat().await;
             match response {
                 Ok(_) => return true,
                 Err(code) => {
