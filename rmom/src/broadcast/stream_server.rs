@@ -404,7 +404,7 @@ impl StreamServer {
 
             broadcast_ends.insert(queue.label.clone(), (new_queue, broadcast_end));
 
-            info!("Queue with label: {} rebuilt succesfully", queue.label);
+            info!("Queue with label: {} restored succesfully", queue.label);
         }
     }
 
