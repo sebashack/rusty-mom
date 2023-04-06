@@ -5,11 +5,28 @@ from momlib import MoMClient, Pusher, Subscriber
 
 
 def main():
-    mom_client = MoMClient("127.0.0.1", 8082)
-    mom_client.create_queue("qa")
-    mom_info1, channel1 = mom_client.create_channel("qa", "david")
-    mom_info2, channel2 = mom_client.create_channel("qa", "guayaba")
+    mom_client1 = MoMClient("127.0.0.1", 8082)
+    mom_client2 = MoMClient("127.0.0.1", 8082)
+    mom_client1.create_queue("cola1")
+    mom_client2.create_queue("cola2")
+    mom_info1, channel1 = mom_client1.create_channel("cola1", "david")
+    mom_info2, channel2 = mom_client2.create_channel("cola2", "guayaba")
 
+    def constant_push():
+        pusher1 = Pusher(mom_info1)
+        pusher2 = Pusher(mom_info2)
+        while True:
+            pusher1.push(b"Hello cola #1!", "cola1")
+            pusher2.push(b"Hello cola #2!", "cola2")
+            time.sleep(2)
+
+    push_thread = threading.Thread(target=constant_push)
+    push_thread.start()
+
+    while True:
+        time.sleep(10)
+
+    """
     print("---- PRUEBA GET CHANNELS (1) ----")
     mom_client.list_channels()
 
@@ -32,7 +49,7 @@ def main():
     mom_client.get_queue_topics("qa")
 
 
-    """
+    
     def constant_push():
         pusher1 = Pusher(mom_info1)
         while True:

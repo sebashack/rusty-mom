@@ -25,8 +25,8 @@ pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Se
 pub struct StreamServer {
     host: String,
     port: u16,
-    external_host: String,
-    external_port: u16,
+    //external_host: String,
+    //external_port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
     buffer_size: usize,
@@ -295,8 +295,8 @@ impl StreamServer {
     pub async fn new(
         host: String,
         port: u16,
-        external_host: String,
-        external_port: u16,
+        //external_host: String,
+        //external_port: u16,
         buffer_size: usize,
         message_ttl: i64,
         db_opts: &DbOpts,
@@ -317,8 +317,8 @@ impl StreamServer {
         StreamServer {
             host,
             port,
-            external_host,
-            external_port,
+            //external_host,
+            //external_port,
             channel_receivers,
             broadcast_ends,
             buffer_size,
