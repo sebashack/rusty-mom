@@ -154,6 +154,42 @@
     },
     "query": "SELECT id, queue_id, topic FROM channel WHERE id = $1"
   },
+  "65c7be18526ef73922fd8c7dd9f1b6d5530a706a83e5183a2c0f340ca8289860": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "is_up",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT mom.id, mom.host, mom.port, mom.is_up FROM mom LEFT JOIN queue ON mom.id = queue.mom_id WHERE mom.is_up = true GROUP BY mom.id, mom.host, mom.port, mom.is_up ORDER BY COUNT(queue.id) ASC LIMIT 1;"
+  },
   "66d2a548605fe9cc16a541b6fcff45e74c02816b3b0b5b0cd1b09e4c482b405a": {
     "describe": {
       "columns": [],

@@ -46,7 +46,7 @@ impl Manager {
                     crud::delete_queue_channels(&mut db_conn, &queue.id).await;
 
                     if let Some((key, mom_id)) =
-                        AvailableMoMs::get_random_up_key(&mut db_conn).await
+                        AvailableMoMs::get_less_loaded_and_up_key(&mut db_conn).await
                     {
                         let all_moms = self.moms.clone();
                         let mut available_mom_lock = all_moms.acquire(&key).await;

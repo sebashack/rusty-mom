@@ -130,6 +130,11 @@ impl AvailableMoMs {
 
         random_mom.map(|mom| ((mom.host.clone(), mom.port), mom.id))
     }
+
+    pub async fn get_less_loaded_and_up_key(db: &mut PoolConnectionPtr) -> Option<(Key, Uuid)> {
+        let mom = crud::select_less_loaded_and_up_mom(db).await;
+        mom.map(|m| ((m.host.clone(), m.port), m.id))
+    }
 }
 
 impl Clone for AvailableMoMs {
