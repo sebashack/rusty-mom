@@ -58,7 +58,7 @@ class MoMClient:
             data = response.json()
             print(f"Response body: {data}")
 
-            return data
+            return (MoMInfo(data["host"], data["port"]), Channel(data["id"], data["topic"]))
         except:
             return None
 
@@ -70,7 +70,7 @@ class MoMClient:
             data = response.json()
             print(f"Response body: {data}")
 
-            return data
+            return (data["label"], MoMInfo(data["host"], data["port"]))
         except:
             return None
 
