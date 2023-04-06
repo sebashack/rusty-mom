@@ -25,6 +25,8 @@ pub type ChannelStream = Pin<Box<dyn Stream<Item = Result<Message, Status>> + Se
 pub struct StreamServer {
     host: String,
     port: u16,
+    external_host: String,
+    external_port: u16,
     channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
     broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
     buffer_size: usize,
@@ -293,6 +295,8 @@ impl StreamServer {
     pub async fn new(
         host: String,
         port: u16,
+        external_host: String,
+        external_port: u16,
         buffer_size: usize,
         message_ttl: i64,
         db_opts: &DbOpts,
@@ -313,12 +317,24 @@ impl StreamServer {
         StreamServer {
             host,
             port,
+            external_host,
+            external_port,
             channel_receivers,
             broadcast_ends,
             buffer_size,
             db_pool,
             message_ttl,
         }
+    }
+
+    pub async fn restore_queues(&self) {
+        // 1. From database retrieve all queues belonging to this mom. (Clue: (external_host, external_port))
+        //    combination is unique for each mom.
+        // 2. For each queue:
+        //    - Retrieve all non expired messages (select_queue_non_expired_messages).
+        //    - Create queue's BroadcastEnd and push messages.
+        //    - Insert new queue with BroadcastEnd in HashMap.
+        // Note: you can base this implementation on rebuild_queue.
     }
 
     pub async fn run(self) {

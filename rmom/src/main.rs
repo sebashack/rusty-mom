@@ -12,11 +12,15 @@ async fn main() {
             let stream_server = StreamServer::new(
                 opts.host,
                 opts.port,
+                opts.external_host,
+                opts.external_port,
                 opts.queue_buffer_size,
                 opts.message_ttl,
                 &opts.database,
             )
             .await;
+
+            stream_server.restore_queues().await;
             stream_server.run().await;
         }
         None => println!(
