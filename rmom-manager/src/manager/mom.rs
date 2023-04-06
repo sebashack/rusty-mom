@@ -90,7 +90,7 @@ impl RegisteredMoM {
                 }
             }
 
-            i += i;
+            i += 1;
             time::sleep(time::Duration::from_millis(delay_millis)).await;
         }
 

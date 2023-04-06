@@ -1,0 +1,13 @@
+host: "127.0.0.4"
+port: 50051
+queue_buffer_size: 10000
+message_ttl: 600
+
+database:
+  host: "127.0.0.1"
+  port: 5432
+  user: postgres
+  password: secret
+  dbname: rmom_manager
+  min_connections: 2
+  max_connections: 20
