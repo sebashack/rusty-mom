@@ -1,0 +1,57 @@
+{
+  "db": "PostgreSQL",
+  "d421f39c6d4f8dc78578efd1c261330df2b75ad677860226175b4b9702b00bc3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamp",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "INSERT INTO message (id, queue_label, topic, expires_at, content) VALUES ($1, $2, $3, $4, $5)"
+  },
+  "e40082f36f442d7ee9a86e7f8ee0135f5edcf4dc11036f38f7af7a5f1ad071da": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "queue_label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "content",
+          "ordinal": 3,
+          "type_info": "Bytea"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at > NOW() ORDER BY created_at ASC"
+  }
+}

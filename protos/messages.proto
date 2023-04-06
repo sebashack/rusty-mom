@@ -9,11 +9,17 @@ service MessageStream {
   rpc PushToQueue (Push) returns (PushOkResponse) {}
   rpc CreateQueue (CreateQueueRequest) returns (CreateQueueOkResponse) {}
   rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueOkResponse) {}
+  rpc RebuildQueue (RebuildQueueRequest) returns (RebuildQueueOkResponse) {}
   rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}
   rpc ListQueues (ListQueuesRequest) returns (ListQueuesResponse) {}
   rpc ListChannels (ListChannelsRequest) returns (ListChannelsResponse) {}
   rpc DeleteChannel (DeleteChannelRequest) returns (DeleteChannelOkResponse) {}
+  rpc GetHeartbeat (HeartbeatRequest) returns (HeartbeatOkResponse) {}
 }
+
+message HeartbeatRequest {}
+
+message HeartbeatOkResponse {}
 
 message SubscriptionRequest {
   string channel_id = 1;
@@ -38,6 +44,12 @@ message CreateQueueRequest {
 }
 
 message CreateQueueOkResponse {}
+
+message RebuildQueueRequest {
+  string queue_label = 1;
+}
+
+message RebuildQueueOkResponse {}
 
 message DeleteQueueRequest {
   string queue_label = 1;

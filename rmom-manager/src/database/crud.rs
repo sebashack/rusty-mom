@@ -3,7 +3,6 @@ use sqlx::types::uuid::Uuid;
 use sqlx::{self, Row};
 
 use super::connection::PoolConnectionPtr;
-use crate::utils::time::sql_timestamp;
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(crate = "rocket::serde")]
@@ -88,6 +87,22 @@ pub async fn select_all_topics_by_queue_label(
     .fetch_all(conn)
     .await
     .and_then(|rs| Ok(rs.into_iter().map(|r| { r.get(0) }).collect()))
+    .unwrap()
+}
+
+pub async fn select_queues_by_mom(
+    conn: &mut PoolConnectionPtr,
+    host: &str,
+    port: i32,
+) -> Vec<QueueRecord> {
+    sqlx::query_as!(
+        QueueRecord,
+        "SELECT queue.id, label, mom_id FROM queue INNER JOIN mom as m ON queue.mom_id = m.id WHERE m.host = $1 AND m.port = $2",
+        host,
+        port
+    )
+    .fetch_all(conn)
+    .await
     .unwrap()
 }
 
@@ -183,14 +198,11 @@ pub async fn insert_mom(
     .unwrap();
 }
 
-pub async fn update_mom_is_up(
-    conn: &mut PoolConnectionPtr,
-    mom_id: &sqlx::types::uuid::Uuid,
-    is_up: bool,
-) {
+pub async fn update_mom_is_up(conn: &mut PoolConnectionPtr, host: &str, port: i32, is_up: bool) {
     sqlx::query!(
-        "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1",
-        mom_id,
+        "UPDATE mom SET is_up = $3, updated_at= $4 WHERE host = $1 AND port = $2",
+        host,
+        port,
         is_up,
         sql_timestamp(),
     )
@@ -256,4 +268,16 @@ pub async fn delete_channel(conn: &mut PoolConnectionPtr, id: &Uuid) {
         .execute(conn)
         .await
         .unwrap();
+}
+
+pub async fn delete_queue_channels(conn: &mut PoolConnectionPtr, queue_id: &Uuid) {
+    sqlx::query!("DELETE FROM channel WHERE queue_id = $1", queue_id)
+        .execute(conn)
+        .await
+        .unwrap();
+}
+
+pub fn sql_timestamp() -> sqlx::types::time::PrimitiveDateTime {
+    let now_utc = sqlx::types::time::OffsetDateTime::now_utc();
+    sqlx::types::time::PrimitiveDateTime::new(now_utc.date(), now_utc.time())
 }

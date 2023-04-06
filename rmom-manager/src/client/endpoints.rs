@@ -1,9 +1,10 @@
 use tonic::transport::Channel;
+use tonic::Code;
 
 use crate::messages::message_stream_client::MessageStreamClient;
 use crate::messages::{
     CreateChannelRequest, CreateQueueRequest, DeleteChannelRequest, DeleteQueueRequest,
-    ListChannelsRequest, ListQueuesRequest,
+    HeartbeatRequest, ListChannelsRequest, ListQueuesRequest, RebuildQueueRequest,
 };
 
 pub struct Client {
@@ -21,6 +22,14 @@ impl Client {
         }
     }
 
+    pub async fn get_heartbeat(&mut self) -> Result<(), Code> {
+        let req = tonic::Request::new(HeartbeatRequest {});
+        match self.connection.get_heartbeat(req).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err.code()),
+        }
+    }
+
     pub async fn create_queue(&mut self, queue_label: &str) -> Result<(), String> {
         let req = tonic::Request::new(CreateQueueRequest {
             queue_label: queue_label.to_string(),
@@ -28,6 +37,16 @@ impl Client {
         match self.connection.create_queue(req).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!("Failed to create queue: {}", err)),
+        }
+    }
+
+    pub async fn rebuild_queue(&mut self, queue_label: &str) -> Result<(), String> {
+        let req = tonic::Request::new(RebuildQueueRequest {
+            queue_label: queue_label.to_string(),
+        });
+        match self.connection.rebuild_queue(req).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(format!("Failed to rebuild queue: {}", err)),
         }
     }
 
