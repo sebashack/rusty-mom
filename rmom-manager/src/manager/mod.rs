@@ -51,7 +51,7 @@ impl Manager {
                                     {
                                         let mut available_mom_lock = all_moms.acquire(&key).await;
                                         if let Some(v) = available_mom_lock.as_mut() {
-                                            if let Some(client) = v.connection.as_mut() {
+                                            if let Some(client) = v.get_client() {
                                                 match client
                                                     .rebuild_queue(q.label.as_str())
                                                     .await

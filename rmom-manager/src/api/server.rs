@@ -6,7 +6,6 @@ use rocket::{Build, Request, Rocket};
 use rocket_db_pools::Database;
 
 use super::endpoints::endpoints;
-use crate::client::endpoints::Client;
 use crate::database::connection::Db;
 use crate::database::crud;
 use crate::manager::mom::{AvailableMoMs, RegisteredMoM};
@@ -86,18 +85,13 @@ pub async fn build_server() -> Rocket<Build> {
             let mut moms = Vec::new();
 
             for c in mom_config.moms.iter() {
-                let client = Client::connect(c.host.clone(), c.port).await;
-                let is_up = client.is_some();
-                let mom = RegisteredMoM {
-                    connection: client,
-                    host: c.host.clone(),
-                    port: c.port,
-                };
+                let mom = RegisteredMoM::new(c.host.clone(), c.port).await;
+                let has_connection = mom.has_connection();
 
                 moms.push(((c.host.clone(), c.port), mom));
 
                 let mom_id = sqlx::types::uuid::Uuid::new_v4();
-                crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port, is_up).await;
+                crud::insert_mom(&mut conn, &mom_id, c.host.as_str(), c.port, has_connection).await;
             }
 
             let available_moms = AvailableMoMs::new(moms);

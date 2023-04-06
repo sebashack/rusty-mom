@@ -19,7 +19,7 @@ async fn post_queue(
         Err((Status::BadRequest, "Queue already exists".to_string()))
     } else if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db).await {
         let mut lock = state.acquire(&key).await;
-        let client = lock.as_mut().unwrap().connection.as_mut().unwrap();
+        let client = lock.as_mut().unwrap().get_client().unwrap();
 
         match client.create_queue(label.as_str()).await {
             Ok(_) => {
@@ -49,7 +49,7 @@ async fn delete_queue(
         if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
             let key = (mom_record.host, mom_record.port);
             let mut lock = state.acquire(&key).await;
-            let client = lock.as_mut().unwrap().connection.as_mut().unwrap();
+            let client = lock.as_mut().unwrap().get_client().unwrap();
 
             crud::delete_queue(&mut db, &queue_record.id).await;
             match client.delete_queue(label.as_str()).await {
@@ -124,7 +124,7 @@ async fn delete_channel(
             {
                 let key = (mom_record.host, mom_record.port);
                 let mut lock = state.acquire(&key).await;
-                let client = lock.as_mut().unwrap().connection.as_mut().unwrap();
+                let client = lock.as_mut().unwrap().get_client().unwrap();
 
                 crud::delete_channel(&mut db, &chan_uuid).await;
                 match client.delete_channel(channel_id.as_str()).await {
@@ -163,7 +163,7 @@ async fn put_channel(
         if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await {
             let key = (mom_record.host.clone(), mom_record.port);
             let mut lock = state.acquire(&key).await;
-            let client = lock.as_mut().unwrap().connection.as_mut().unwrap();
+            let client = lock.as_mut().unwrap().get_client().unwrap();
 
             match client.create_channel(label.as_str(), topic.as_str()).await {
                 Ok(channel_id) => {

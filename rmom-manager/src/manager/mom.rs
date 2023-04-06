@@ -17,7 +17,7 @@ type Port = i32;
 type Key = (Host, Port);
 
 pub struct RegisteredMoM {
-    pub connection: Option<Client>,
+    connection: Option<Client>,
     pub host: String,
     pub port: i32,
 }
@@ -29,6 +29,23 @@ pub enum ConnectionStatus {
 }
 
 impl RegisteredMoM {
+    pub async fn new(host: String, port: i32) -> Self {
+        let client = Client::connect(host.clone(), port).await;
+        RegisteredMoM {
+            connection: client,
+            host: host,
+            port: port,
+        }
+    }
+
+    pub fn has_connection(&self) -> bool {
+        self.connection.is_some()
+    }
+
+    pub fn get_client(&mut self) -> Option<&mut Client> {
+        self.connection.as_mut()
+    }
+
     pub async fn probe_conn_status(
         &mut self,
         max_retries: u16,
