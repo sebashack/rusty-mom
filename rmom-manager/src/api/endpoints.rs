@@ -1,33 +1,11 @@
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::serde::uuid::Uuid;
-use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
 
 use crate::api::mom::AvailableMoMs;
 use crate::database::connection::DbConnection;
-use crate::database::crud;
-
-// TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
-const HARCODED_HOST: &str = "127.0.0.1";
-const HARCODED_PORT: i32 = 50051;
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct ChannelInfo {
-    pub id: String,
-    pub host: String,
-    pub topic: String,
-    pub port: i32,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct QueueInfo {
-    pub label: String,
-    pub host: String,
-    pub port: i32,
-}
+use crate::database::crud::{self, ChannelInfo, QueueInfo};
 
 #[post("/queues/<label>")]
 async fn post_queue(
@@ -94,28 +72,26 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
     Json(records.into_iter().map(|q| q.label).collect())
 }
 
-#[get("/queues/<queue_id>")]
-async fn get_queue_info(
-    mut db: DbConnection,
-    queue_id: Uuid,
-) -> Result<Json<QueueInfo>, (Status, String)> {
-    unimplemented!()
+#[get("/queue/<queue_label>/topics")]
+async fn get_queue_topics(mut db: DbConnection, queue_label: &str) -> Json<Vec<String>> {
+    Json(crud::select_all_topics_by_queue_label(&mut db, queue_label).await)
 }
 
 #[get("/channels")]
-async fn get_channels(state: &State<AvailableMoMs>) -> Result<Json<Vec<String>>, (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
+async fn get_channels(mut db: DbConnection) -> Json<Vec<Uuid>> {
+    let records = crud::select_all_channels(&mut db).await;
+    Json(records.into_iter().map(|c| c.id).collect())
+}
 
-    let response = client.list_channels().await;
-    match response {
-        Ok(queues) => Ok(Json(queues)),
-        Err(err) => Err((Status::BadRequest, err)),
+#[get("/queues/<queue_label>")]
+async fn get_queue_info(
+    mut db: DbConnection,
+    queue_label: String,
+) -> Result<Json<QueueInfo>, (Status, String)> {
+    if let Some(queue) = crud::select_queue_info(&mut db, &queue_label).await {
+        Ok(Json(queue))
+    } else {
+        Err((Status::NotFound, "Queue not found".to_string()))
     }
 }
 
@@ -124,26 +100,50 @@ async fn get_channel_info(
     mut db: DbConnection,
     channel_id: Uuid,
 ) -> Result<Json<ChannelInfo>, (Status, String)> {
-    unimplemented!()
+    if let Some(channel) = crud::select_channel_info(&mut db, &channel_id).await {
+        Ok(Json(channel))
+    } else {
+        Err((Status::NotFound, "Channel not found".to_string()))
+    }
 }
 
 #[delete("/channels/<channel_id>")]
 async fn delete_channel(
+    mut db: DbConnection,
     state: &State<AvailableMoMs>,
     channel_id: String,
 ) -> Result<(), (Status, String)> {
-    let mut lock = state.moms.lock().await;
-    let client = lock
-        .get_mut(&(HARCODED_HOST.to_string(), HARCODED_PORT))
-        .unwrap()
-        .connection
-        .as_mut()
-        .unwrap();
+    let chan_uuid = Uuid::parse_str(channel_id.as_str()).unwrap();
+    if let Some(channel_record) = crud::select_channel(&mut db, &chan_uuid).await {
+        if let Some(queue_record) =
+            crud::select_queue_by_id(&mut db, &channel_record.queue_id).await
+        {
+            if queue_record.mom_id.is_none() {
+                return Err((Status::NotFound, "MoM not available".to_string()));
+            }
 
-    let response = client.delete_channel(channel_id.as_str()).await;
-    match response {
-        Ok(_) => Ok(()),
-        Err(err) => Err((Status::BadRequest, err)),
+            if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await
+            {
+                let key = (mom_record.host, mom_record.port);
+                let mut lock = state.moms.lock().await;
+                let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+
+                crud::delete_channel(&mut db, &chan_uuid).await;
+                match client.delete_channel(channel_id.as_str()).await {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err((Status::BadRequest, err)),
+                }
+            } else {
+                Err((Status::InternalServerError, "MoM not available".to_string()))
+            }
+        } else {
+            Err((
+                Status::InternalServerError,
+                "Queue not available".to_string(),
+            ))
+        }
+    } else {
+        Err((Status::NotFound, "Channel not found".to_string()))
     }
 }
 
@@ -173,7 +173,7 @@ async fn put_channel(
                     crud::insert_channel(&mut db, &chan_uuid, &queue_record.id, topic.as_str())
                         .await;
                     Ok(Json(ChannelInfo {
-                        id: channel_id,
+                        id: chan_uuid,
                         host: mom_record.host,
                         port: mom_record.port,
                         topic,
@@ -187,11 +187,6 @@ async fn put_channel(
     } else {
         Err((Status::NotFound, "Queue not found".to_string()))
     }
-}
-
-#[get("/queue/<queue_label>/topics")]
-async fn get_queue_topics(mut db: DbConnection, queue_label: String) -> Result<Json<Vec<String>>, (Status, String)> {
-    unimplemented!()
 }
 
 pub fn endpoints() -> Vec<Route> {

@@ -14,6 +14,38 @@
     },
     "query": "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)"
   },
+  "20b1cfb13f6bd2e09a875b29fd69daafb5b34d4bdcf3738a6e109486958b2776": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, label, mom_id FROM queue WHERE id = $1"
+  },
   "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
     "describe": {
       "columns": [],
@@ -27,6 +59,18 @@
       }
     },
     "query": "UPDATE mom SET is_up=$2, updated_at=$3 WHERE id = $1"
+  },
+  "23b09a9fad7137cd5e946593eb048e780ad0d9b3790cbd57c114639e2a8eab1a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM channel WHERE id = $1"
   },
   "46a2b54294dfd88ff5b7abbf0f02fcdb1dae4542e98761973577b92bbbe25bad": {
     "describe": {
@@ -43,6 +87,38 @@
       }
     },
     "query": "INSERT INTO mom (id, host, port, is_up) VALUES ($1, $2, $3, $4) ON CONFLICT (host, port) DO UPDATE SET is_up = $4, updated_at = $5"
+  },
+  "592d6804da37fca7ccafc569c174b161041ae0f5a1c0fb30f134c5c2fdca4dce": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "queue_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, queue_id, topic FROM channel WHERE id = $1"
   },
   "66d2a548605fe9cc16a541b6fcff45e74c02816b3b0b5b0cd1b09e4c482b405a": {
     "describe": {
@@ -78,6 +154,36 @@
     },
     "query": "SELECT id FROM queue WHERE label = $1"
   },
+  "81b6d04ee68deebf8e1d65aa3766ecf8ab3cc20b668caff28b7898247eb21540": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "queue_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, queue_id, topic FROM channel"
+  },
   "88d4d865c1c8119c8a07439d96a6c82c4878f0e06cece040af30ec1bd6cfc709": {
     "describe": {
       "columns": [
@@ -109,6 +215,76 @@
       }
     },
     "query": "SELECT id, label, mom_id FROM queue WHERE label = $1"
+  },
+  "9db58db3be2458f38e693a5c466590ace01b8206a795f97e3c36132938d39110": {
+    "describe": {
+      "columns": [
+        {
+          "name": "label",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 2,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT q.label, m.host, m.port FROM queue q INNER JOIN mom m ON q.mom_id = m.id WHERE q.label = $1"
+  },
+  "a42074132f37f8b3fb6da1d074d88dfb7433433fe26c05ac9024fc179a0a9da2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "host",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "topic",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "port",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1"
   },
   "aa562058ae7ef7e6c53588f537b44a7d21f11c1821e5c430970ed1e5f55304af": {
     "describe": {

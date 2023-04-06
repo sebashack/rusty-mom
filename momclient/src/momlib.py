@@ -50,6 +50,54 @@ class MoMClient:
         print(f"Response Status: {response.status_code}")
         print(f"Response body: {response.text}")
 
+    def get_channel_info(self, channel_id):
+        response = requests.get(f"{self.root()}/channels/{channel_id}")
+        print(f"Response Status: {response.status_code}")
+
+        try:
+            data = response.json()
+            print(f"Response body: {data}")
+
+            return data
+        except:
+            return None
+
+    def get_queue_info(self, queue_label):
+        response = requests.get(f"{self.root()}/queues/{queue_label}")
+        print(f"Response Status: {response.status_code}")
+
+        try:
+            data = response.json()
+            print(f"Response body: {data}")
+
+            return data
+        except:
+            return None
+
+    def get_queue_topics(self, queue_label):
+        response = requests.get(f"{self.root()}/queue/{queue_label}/topics")
+        print(f"Response Status: {response.status_code}")
+
+        try:
+            data = response.json()
+            print(f"Response body: {data}")
+
+            return data
+        except:
+            return None
+
+    def list_channels(self):
+        response = requests.get(f"{self.root()}/channels")
+        print(f"Response Status: {response.status_code}")
+
+        try:
+            data = response.json()
+            print(f"Response body: {data}")
+
+            return data
+        except:
+            return None
+
     def list_queues(self):
         response = requests.get(f"{self.root()}/queues")
         print(f"Response Status: {response.status_code}")

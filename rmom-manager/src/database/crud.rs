@@ -1,9 +1,33 @@
+use rocket::serde::Serialize;
 use sqlx::types::uuid::Uuid;
-use sqlx::{self};
+use sqlx::{self, Row};
 
 use super::connection::PoolConnectionPtr;
-
 use crate::utils::time::sql_timestamp;
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct ChannelInfo {
+    pub id: Uuid,
+    pub host: String,
+    pub topic: String,
+    pub port: i32,
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct QueueInfo {
+    pub label: String,
+    pub host: String,
+    pub port: i32,
+}
+
+#[derive(Debug)]
+pub struct ChannelRecord {
+    pub id: Uuid,
+    pub queue_id: Uuid,
+    pub topic: String,
+}
 
 #[derive(Debug)]
 pub struct QueueRecord {
@@ -34,11 +58,86 @@ pub async fn select_all_queues(conn: &mut PoolConnectionPtr) -> Vec<QueueRecord>
         .unwrap()
 }
 
+pub async fn select_all_channels(conn: &mut PoolConnectionPtr) -> Vec<ChannelRecord> {
+    sqlx::query_as!(ChannelRecord, "SELECT id, queue_id, topic FROM channel")
+        .fetch_all(conn)
+        .await
+        .unwrap()
+}
+
+pub async fn select_channel(
+    conn: &mut PoolConnectionPtr,
+    channel_id: &Uuid,
+) -> Option<ChannelRecord> {
+    sqlx::query_as!(
+        ChannelRecord,
+        "SELECT id, queue_id, topic FROM channel WHERE id = $1",
+        channel_id,
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_all_topics_by_queue_label(
+    conn: &mut PoolConnectionPtr,
+    queue_label: &str,
+) -> Vec<String> {
+    sqlx::query("SELECT DISTINCT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1 AND channel.topic != '__none__'")
+    .bind(queue_label)
+    .fetch_all(conn)
+    .await
+    .and_then(|rs| Ok(rs.into_iter().map(|r| { r.get(0) }).collect()))
+    .unwrap()
+}
+
 pub async fn select_queue(conn: &mut PoolConnectionPtr, queue_label: &str) -> Option<QueueRecord> {
     sqlx::query_as!(
         QueueRecord,
         "SELECT id, label, mom_id FROM queue WHERE label = $1",
         queue_label
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_queue_info(
+    conn: &mut PoolConnectionPtr,
+    queue_label: &String,
+) -> Option<QueueInfo> {
+    sqlx::query_as!(
+        QueueInfo,
+        "SELECT q.label, m.host, m.port FROM queue q INNER JOIN mom m ON q.mom_id = m.id WHERE q.label = $1",
+        queue_label
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_channel_info(
+    conn: &mut PoolConnectionPtr,
+    channel_id: &Uuid,
+) -> Option<ChannelInfo> {
+    sqlx::query_as!(
+        ChannelInfo,
+        "SELECT c.id, m.host, c.topic, m.port FROM channel c INNER JOIN queue q ON c.queue_id = q.id INNER JOIN mom m ON  q.mom_id = m.id WHERE c.id = $1",
+        channel_id
+    )
+    .fetch_optional(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_queue_by_id(
+    conn: &mut PoolConnectionPtr,
+    queue_id: &Uuid,
+) -> Option<QueueRecord> {
+    sqlx::query_as!(
+        QueueRecord,
+        "SELECT id, label, mom_id FROM queue WHERE id = $1",
+        queue_id
     )
     .fetch_optional(conn)
     .await
@@ -146,7 +245,14 @@ pub async fn update_queue_mom(
 }
 
 pub async fn delete_queue(conn: &mut PoolConnectionPtr, id: &Uuid) {
-    sqlx::query!("DELETE FROM queue WHERE id = $1", id,)
+    sqlx::query!("DELETE FROM queue WHERE id = $1", id)
+        .execute(conn)
+        .await
+        .unwrap();
+}
+
+pub async fn delete_channel(conn: &mut PoolConnectionPtr, id: &Uuid) {
+    sqlx::query!("DELETE FROM channel WHERE id = $1", id)
         .execute(conn)
         .await
         .unwrap();
