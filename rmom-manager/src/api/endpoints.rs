@@ -1,29 +1,11 @@
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::serde::uuid::Uuid;
-use rocket::serde::{Deserialize, Serialize};
 use rocket::{Route, State};
 
 use crate::api::mom::AvailableMoMs;
 use crate::database::connection::DbConnection;
-use crate::database::crud;
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct ChannelInfo {
-    pub id: Uuid,
-    pub host: String,
-    pub topic: String,
-    pub port: i32,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct QueueInfo {
-    pub label: String,
-    pub host: String,
-    pub port: i32,
-}
+use crate::database::crud::{self, ChannelInfo, QueueInfo};
 
 #[post("/queues/<label>")]
 async fn post_queue(
@@ -92,8 +74,7 @@ async fn get_queues(mut db: DbConnection) -> Json<Vec<String>> {
 
 #[get("/queue/<queue_label>/topics")]
 async fn get_queue_topics(mut db: DbConnection, queue_label: &str) -> Json<Vec<String>> {
-    let records = crud::select_all_topics_by_queue_label(&mut db, queue_label).await;
-    Json(records.into_iter().map(|t| t.topic).collect())
+    Json(crud::select_all_topics_by_queue_label(&mut db, queue_label).await)
 }
 
 #[get("/channels")]

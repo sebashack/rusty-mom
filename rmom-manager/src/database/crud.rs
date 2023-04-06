@@ -1,13 +1,25 @@
+use rocket::serde::Serialize;
 use sqlx::types::uuid::Uuid;
-use sqlx::{self};
+use sqlx::{self, Row};
 
 use super::connection::PoolConnectionPtr;
-
-use crate::api::endpoints::{ChannelInfo, QueueInfo};
 use crate::utils::time::sql_timestamp;
 
-pub struct TopicRecord {
+#[derive(Serialize, Debug, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct ChannelInfo {
+    pub id: Uuid,
+    pub host: String,
     pub topic: String,
+    pub port: i32,
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct QueueInfo {
+    pub label: String,
+    pub host: String,
+    pub port: i32,
 }
 
 #[derive(Debug)]
@@ -70,14 +82,12 @@ pub async fn select_channel(
 pub async fn select_all_topics_by_queue_label(
     conn: &mut PoolConnectionPtr,
     queue_label: &str,
-) -> Vec<TopicRecord> {
-    sqlx::query_as!(
-        TopicRecord,
-        "SELECT DISTINCT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1 AND channel.topic != '__none__'",
-        queue_label
-    )
+) -> Vec<String> {
+    sqlx::query("SELECT DISTINCT channel.topic FROM channel INNER JOIN queue ON channel.queue_id = queue.id WHERE queue.label = $1 AND channel.topic != '__none__'")
+    .bind(queue_label)
     .fetch_all(conn)
     .await
+    .and_then(|rs| Ok(rs.into_iter().map(|r| { r.get(0) }).collect()))
     .unwrap()
 }
 
