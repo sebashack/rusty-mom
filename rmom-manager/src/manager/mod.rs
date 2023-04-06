@@ -46,6 +46,8 @@ impl Manager {
                                     crud::select_queues_by_mom(&mut db_conn, host.as_ref(), port)
                                         .await;
                                 for q in queue_records {
+                                    crud::delete_queue_channels(&mut db_conn, &q.id).await;
+
                                     if let Some((key, mom_id)) =
                                         AvailableMoMs::get_random_up_key(&mut db_conn).await
                                     {

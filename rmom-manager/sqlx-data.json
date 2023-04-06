@@ -356,6 +356,18 @@
     },
     "query": "SELECT id, host, port, is_up FROM mom"
   },
+  "ab93c2a680e9c9a0c579ed791c5c1c44f0e2b830fd321ed22cce7b07910c4f78": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM channel WHERE queue_id = $1"
+  },
   "b907bc49ec4a79ed69ee0a27a2e1c252b1f8a802896df0cb9ba1ae6d4c8c4fd6": {
     "describe": {
       "columns": [],

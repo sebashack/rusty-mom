@@ -270,6 +270,13 @@ pub async fn delete_channel(conn: &mut PoolConnectionPtr, id: &Uuid) {
         .unwrap();
 }
 
+pub async fn delete_queue_channels(conn: &mut PoolConnectionPtr, queue_id: &Uuid) {
+    sqlx::query!("DELETE FROM channel WHERE queue_id = $1", queue_id)
+        .execute(conn)
+        .await
+        .unwrap();
+}
+
 pub fn sql_timestamp() -> sqlx::types::time::PrimitiveDateTime {
     let now_utc = sqlx::types::time::OffsetDateTime::now_utc();
     sqlx::types::time::PrimitiveDateTime::new(now_utc.date(), now_utc.time())
