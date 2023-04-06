@@ -1,5 +1,7 @@
 host: "127.0.0.2"
 port: 50051
+external_host: "127.0.0.2"
+external_port: 50051
 queue_buffer_size: 10000
 message_ttl: 600
 

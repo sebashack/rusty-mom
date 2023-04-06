@@ -328,13 +328,39 @@ impl StreamServer {
     }
 
     pub async fn restore_queues(&self) {
-        // 1. From database retrieve all queues belonging to this mom. (Clue: (external_host, external_port))
-        //    combination is unique for each mom.
-        // 2. For each queue:
-        //    - Retrieve all non expired messages (select_queue_non_expired_messages).
-        //    - Create queue's BroadcastEnd and push messages.
-        //    - Insert new queue with BroadcastEnd in HashMap.
-        // Note: you can base this implementation on rebuild_queue.
+        let mut conn = self.db_pool.acquire().await;
+        let queues = crud::select_queues_by_mom(
+            &mut conn,
+            self.external_host.as_str(),
+            self.external_port.into(),
+        )
+        .await;
+
+        for queue in queues {
+            let messages =
+                crud::select_queue_non_expired_messages(&mut conn, &queue.label.as_str())
+                    .await
+                    .into_iter()
+                    .map(|m| Message {
+                        id: m.id.to_string(),
+                        content: m.content,
+                        topic: m.topic,
+                    });
+
+            let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+            let new_queue = Queue::new(self.buffer_size, queue.label.clone());
+            let broadcast_end = new_queue.get_broadcast_end();
+
+            for msg in messages {
+                if let Err(err) = broadcast_end.broadcast(msg) {
+                    warn!("Failed to broadcast recovered message: {err}")
+                }
+            }
+
+            broadcast_ends.insert(queue.label.clone(), (new_queue, broadcast_end));
+
+            info!("Queue with label: {} restored succesfully", queue.label);
+        }
     }
 
     pub async fn run(self) {
