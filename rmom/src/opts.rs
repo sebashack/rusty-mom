@@ -6,8 +6,8 @@ use std::path::Path;
 pub struct Opts {
     pub host: String,
     pub port: u16,
-    //pub external_host: String,
-    //pub external_port: u16,
+    pub external_host: String,
+    pub external_port: u16,
     pub queue_buffer_size: usize,
     pub message_ttl: i64,
     pub database: DbOpts,
