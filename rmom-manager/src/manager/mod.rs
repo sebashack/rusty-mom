@@ -22,6 +22,17 @@ impl Manager {
         Manager { moms, db_pool }
     }
 
+    pub async fn restore_queues(&self) {
+        // 1. Check which moms are down. Retrieve this data from DB: select_down_moms. (Vec<MomRecord>)
+        // 2. Given down moms, retrieve the queues they were serving. Retrieve this data from DB as well: select_queues_by_mom. (Clue: HashMap<Uuid?(Host, port)?, Vec<QueueRecord>)>)
+        // 3. For each missing queue:
+        //    - Delete queue channels from DB.
+        //    - Select a random available mom from AvailableMoMs (Clue: User method get_random_up_key).
+        //    - Get lock for that random available mom.
+        //    - Send rebuild request (with queue_label) to that available random mom.
+        //    - Update the queue's mom_id (from the random available mom) in DB (Foreign key).
+    }
+
     pub async fn run(&self) {
         loop {
             for mom in self.moms.get_value_iter() {

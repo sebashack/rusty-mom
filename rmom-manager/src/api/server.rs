@@ -96,6 +96,8 @@ pub async fn build_server() -> Rocket<Build> {
 
             let available_moms = AvailableMoMs::new(moms);
             let manager = Manager::new(available_moms.clone(), db_pool.0.clone());
+
+            manager.restore_queues().await;
             task::spawn(async move { manager.run().await });
 
             rocket.manage(available_moms)
