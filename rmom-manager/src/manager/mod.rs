@@ -42,6 +42,45 @@ impl Manager {
         //    - Get lock for that random available mom.
         //    - Send rebuild request (with queue_label) to that available random mom.
         //    - Update the queue's mom_id (from the random available mom) in DB (Foreign key).
+
+        let db_pool = self.db_pool.clone();
+
+        if let Ok(mut db_conn) = db_pool.acquire().await {
+            let down_moms = crud::select_down_moms(&mut db_conn).await;
+
+            for mom in down_moms {
+                let queues = crud::select_queues_by_mom(&mut db_conn, &mom.host, mom.port).await;
+
+                for queue in queues {
+                    crud::delete_queue_channels(&mut db_conn, &queue.id).await;
+
+                    if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db_conn).await {
+                        let all_moms = self.moms.clone();
+                        let mut available_mom_lock = all_moms.acquire(&key).await;
+
+                        if let Some(v) = available_mom_lock.as_mut() {
+                            if let Some(client) = v.get_client() {
+                                match client
+                                    .rebuild_queue(&queue.label.as_str())
+                                    .await
+                                {
+                                    Ok(_) => crud::update_queue_mom(&mut db_conn, &queue.id, &mom_id).await,
+                                    Err(err) => warn!("MoM replied with error on rebuilding queue: {err}")
+                                }
+                            } else {
+                                warn!("Failed to get MoM with connection");
+                            }
+                        } else {
+                            warn!("Failed to get MoM lock");
+                        }
+                    } else {
+                        warn!("Not available moms for restore")
+                    }
+                }
+            }
+        } else {
+            warn!("Manager thread: failed to get DB connection");
+        }
     }
 
     pub async fn run(&self) {

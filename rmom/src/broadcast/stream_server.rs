@@ -327,6 +327,47 @@ impl StreamServer {
         }
     }
 
+    /*
+        async fn rebuild_queue(
+        &self,
+        request: Request<RebuildQueueRequest>,
+    ) -> Result<Response<RebuildQueueOkResponse>, Status> {
+        let request = request.into_inner();
+        let label = request.queue_label.to_lowercase();
+        let mut conn = self.db_pool.acquire().await;
+
+        info!("Request to REBUILD queue with label: {}", label);
+
+        let messages = crud::select_queue_non_expired_messages(&mut conn, &label)
+            .await
+            .into_iter()
+            .map(|m| Message {
+                id: m.id.to_string(),
+                content: m.content,
+                topic: m.topic,
+            });
+
+        let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+        if broadcast_ends.contains_key(&label) {
+            Err(Status::new(Code::InvalidArgument, "Queue already exists"))
+        } else {
+            let queue = Queue::new(self.buffer_size, label.clone());
+            let broadcast_end = queue.get_broadcast_end();
+
+            for msg in messages {
+                if let Err(err) = broadcast_end.broadcast(msg) {
+                    warn!("Failed to broadcast recovered message: {err}")
+                }
+            }
+
+            broadcast_ends.insert(label.clone(), (queue, broadcast_end));
+
+            info!("Queue with label: {} rebuilt succesfully", label);
+            Ok(Response::new(RebuildQueueOkResponse {}))
+        }
+    }
+    */
+
     pub async fn restore_queues(&self) {
         // 1. From database retrieve all queues belonging to this mom. (Clue: (external_host, external_port))
         //    combination is unique for each mom.
@@ -335,6 +376,34 @@ impl StreamServer {
         //    - Create queue's BroadcastEnd and push messages.
         //    - Insert new queue with BroadcastEnd in HashMap.
         // Note: you can base this implementation on rebuild_queue.
+
+        let mut conn = self.db_pool.acquire().await;
+        let queues = crud::select_queues_by_mom(&mut conn, self.host.as_str(), self.port.into()).await;
+
+        for queue in queues {
+            let messages = crud::select_queue_non_expired_messages(&mut conn, &queue.label.as_str())
+            .await
+            .into_iter()
+            .map(|m| Message {
+                id: m.id.to_string(),
+                content: m.content,
+                topic: m.topic,
+            });
+
+            let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
+            let new_queue = Queue::new(self.buffer_size, queue.label.clone());
+            let broadcast_end = new_queue.get_broadcast_end();
+
+            for msg in messages {
+                if let Err(err) = broadcast_end.broadcast(msg) {
+                    warn!("Failed to broadcast recovered message: {err}")
+                }
+            }
+
+            broadcast_ends.insert(queue.label.clone(), (new_queue, broadcast_end));
+
+            info!("Queue with label: {} rebuilt succesfully", queue.label);
+        }
     }
 
     pub async fn run(self) {

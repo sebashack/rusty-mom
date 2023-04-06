@@ -1,5 +1,38 @@
 {
   "db": "PostgreSQL",
+  "4597bdd5c527e839776183ad9c45314e2349a088f3ce77a8e394edcec5fd8f06": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "label",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "mom_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT queue.id, label, mom_id FROM queue INNER JOIN mom as m ON queue.mom_id = m.id WHERE m.host = $1 AND m.port = $2"
+  },
   "d421f39c6d4f8dc78578efd1c261330df2b75ad677860226175b4b9702b00bc3": {
     "describe": {
       "columns": [],

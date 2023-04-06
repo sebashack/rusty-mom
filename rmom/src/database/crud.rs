@@ -13,6 +13,13 @@ pub struct MessageRecord {
     pub content: Vec<u8>,
 }
 
+#[derive(Debug)]
+pub struct QueueRecord {
+    pub id: Uuid,
+    pub label: String,
+    pub mom_id: Option<Uuid>,
+}
+
 pub async fn insert_message(
     conn: &mut PoolConnectionPtr,
     id: &Uuid,
@@ -43,6 +50,22 @@ pub async fn select_queue_non_expired_messages(
         MessageRecord,
         "SELECT id, queue_label, topic, content FROM message WHERE queue_label = $1 AND expires_at > NOW() ORDER BY created_at ASC",
         queue_label,
+    )
+    .fetch_all(conn)
+    .await
+    .unwrap()
+}
+
+pub async fn select_queues_by_mom(
+    conn: &mut PoolConnectionPtr,
+    host: &str,
+    port: i32,
+) -> Vec<QueueRecord> {
+    sqlx::query_as!(
+        QueueRecord,
+        "SELECT queue.id, label, mom_id FROM queue INNER JOIN mom as m ON queue.mom_id = m.id WHERE m.host = $1 AND m.port = $2",
+        host,
+        port
     )
     .fetch_all(conn)
     .await
