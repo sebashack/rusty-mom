@@ -3,7 +3,7 @@ use futures::lock::{Mutex, MutexGuard};
 use log::info;
 use rand::prelude::IteratorRandom;
 use rocket::serde::uuid::Uuid;
-use rocket::tokio::{task, time};
+use rocket::tokio::time;
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
 use std::sync::Arc;

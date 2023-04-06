@@ -25,7 +25,7 @@ impl Manager {
     pub async fn run(&self) {
         loop {
             for mom in self.moms.get_value_iter() {
-                let mut mom_ref = Arc::clone(mom);
+                let mom_ref = Arc::clone(mom);
                 let db_pool = self.db_pool.clone();
                 let all_moms = self.moms.clone();
 

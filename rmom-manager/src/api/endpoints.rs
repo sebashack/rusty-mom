@@ -4,29 +4,8 @@ use rocket::serde::uuid::Uuid;
 use rocket::{Route, State};
 
 use crate::database::connection::DbConnection;
-use crate::database::crud;
+use crate::database::crud::{self, ChannelInfo, QueueInfo};
 use crate::manager::mom::AvailableMoMs;
-
-// TODO: Remove this hardcoded host and implement logic to decide which moms to pick out.
-const HARCODED_HOST: &str = "127.0.0.1";
-const HARCODED_PORT: i32 = 50051;
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct ChannelInfo {
-    pub id: String,
-    pub host: String,
-    pub topic: String,
-    pub port: i32,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
-pub struct QueueInfo {
-    pub label: String,
-    pub host: String,
-    pub port: i32,
-}
 
 #[post("/queues/<label>")]
 async fn post_queue(
@@ -144,8 +123,8 @@ async fn delete_channel(
             if let Some(mom_record) = crud::select_mom(&mut db, &queue_record.mom_id.unwrap()).await
             {
                 let key = (mom_record.host, mom_record.port);
-                let mut lock = state.moms.lock().await;
-                let client = lock.get_mut(&key).unwrap().connection.as_mut().unwrap();
+                let mut lock = state.acquire(&key).await;
+                let client = lock.as_mut().unwrap().connection.as_mut().unwrap();
 
                 crud::delete_channel(&mut db, &chan_uuid).await;
                 match client.delete_channel(channel_id.as_str()).await {

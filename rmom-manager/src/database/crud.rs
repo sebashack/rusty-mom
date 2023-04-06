@@ -3,7 +3,6 @@ use sqlx::types::uuid::Uuid;
 use sqlx::{self, Row};
 
 use super::connection::PoolConnectionPtr;
-use crate::utils::time::sql_timestamp;
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(crate = "rocket::serde")]

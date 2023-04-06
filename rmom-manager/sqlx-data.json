@@ -14,7 +14,6 @@
     },
     "query": "INSERT INTO channel (id, queue_id, topic) VALUES ($1, $2, $3)"
   },
-<<<<<<< HEAD
   "20b1cfb13f6bd2e09a875b29fd69daafb5b34d4bdcf3738a6e109486958b2776": {
     "describe": {
       "columns": [
@@ -47,10 +46,19 @@
     },
     "query": "SELECT id, label, mom_id FROM queue WHERE id = $1"
   },
-  "23adbeba31afa19b6cdd092283bfcea1b10a750400a952824745bc733cc8e6f7": {
-=======
+  "23b09a9fad7137cd5e946593eb048e780ad0d9b3790cbd57c114639e2a8eab1a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM channel WHERE id = $1"
+  },
   "243e3eb152a9390f3c92b04ed8b01ee745ac9f970765377ff536592e26c8c97a": {
->>>>>>> af7e7ba (Introduce queue rebuilding and management)
     "describe": {
       "columns": [],
       "nullable": [],

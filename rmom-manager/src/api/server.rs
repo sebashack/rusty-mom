@@ -1,7 +1,7 @@
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::Deserialize;
-use rocket::tokio::{task, time};
+use rocket::tokio::task;
 use rocket::{Build, Request, Rocket};
 use rocket_db_pools::Database;
 
