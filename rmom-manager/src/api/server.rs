@@ -57,14 +57,13 @@ struct MoMConfig {
 #[serde(crate = "rocket::serde")]
 struct Config {
     moms: Vec<MoMConfig>,
+    manager_cycle_secs: u64,
+    life_probe_max_retries: u16,
+    life_probe_retry_delay_millis: u64,
 }
 
 pub async fn build_server() -> Rocket<Build> {
-    let rocket = rocket::build();
-    let figment = rocket.figment();
-    let mom_config: Config = figment.extract().expect("config");
-
-    rocket
+    rocket::build()
         .attach(Db::init())
         .mount("/", routes![status])
         .mount("/", endpoints())
@@ -80,11 +79,13 @@ pub async fn build_server() -> Rocket<Build> {
             ],
         )
         .attach(AdHoc::on_ignite("Manager thread", |rocket| async move {
+            let figment = rocket.figment();
+            let config: Config = figment.extract().expect("config");
             let db_pool = Db::fetch(&rocket).unwrap();
             let mut conn = db_pool.acquire().await.unwrap();
             let mut moms = Vec::new();
 
-            for c in mom_config.moms.iter() {
+            for c in config.moms.iter() {
                 let mom = RegisteredMoM::new(c.host.clone(), c.port).await;
                 let has_connection = mom.has_connection();
 
@@ -95,7 +96,13 @@ pub async fn build_server() -> Rocket<Build> {
             }
 
             let available_moms = AvailableMoMs::new(moms);
-            let manager = Manager::new(available_moms.clone(), db_pool.0.clone());
+            let manager = Manager::new(
+                available_moms.clone(),
+                db_pool.0.clone(),
+                config.manager_cycle_secs,
+                config.life_probe_max_retries,
+                config.life_probe_retry_delay_millis,
+            );
 
             manager.restore_queues().await;
             task::spawn(async move { manager.run().await });

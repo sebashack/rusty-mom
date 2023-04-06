@@ -8,18 +8,29 @@ use std::sync::Arc;
 use crate::database::crud;
 use crate::manager::mom::{AvailableMoMs, ConnectionStatus};
 
-const MAX_RETRIES: u16 = 3;
-const RETRY_DELAY_MILLIS: u64 = 25;
-const MANAGER_DELAY_SECS: u64 = 3;
-
 pub struct Manager {
     moms: AvailableMoMs,
     db_pool: Pool<Postgres>,
+    manager_cycle_secs: u64,
+    life_probe_max_retries: u16,
+    life_probe_retry_delay_millis: u64,
 }
 
 impl Manager {
-    pub fn new(moms: AvailableMoMs, db_pool: Pool<Postgres>) -> Self {
-        Manager { moms, db_pool }
+    pub fn new(
+        moms: AvailableMoMs,
+        db_pool: Pool<Postgres>,
+        manager_cycle_secs: u64,
+        life_probe_max_retries: u16,
+        life_probe_retry_delay_millis: u64,
+    ) -> Self {
+        Manager {
+            moms,
+            db_pool,
+            life_probe_max_retries,
+            life_probe_retry_delay_millis,
+            manager_cycle_secs,
+        }
     }
 
     pub async fn restore_queues(&self) {
@@ -39,16 +50,15 @@ impl Manager {
                 let mom_ref = Arc::clone(mom);
                 let db_pool = self.db_pool.clone();
                 let all_moms = self.moms.clone();
+                let max_retries = self.life_probe_max_retries;
+                let retry_delay = self.life_probe_retry_delay_millis;
 
                 task::spawn(async move {
                     let mut mom_lock = mom_ref.lock().await;
                     let host = mom_lock.host.clone();
                     let port = mom_lock.port;
 
-                    match mom_lock
-                        .probe_conn_status(MAX_RETRIES, RETRY_DELAY_MILLIS)
-                        .await
-                    {
+                    match mom_lock.probe_conn_status(max_retries, retry_delay).await {
                         ConnectionStatus::Unavailable => {
                             if let Ok(mut db_conn) = db_pool.acquire().await {
                                 crud::update_mom_is_up(&mut db_conn, host.as_ref(), port, false)
@@ -100,7 +110,7 @@ impl Manager {
                 });
             }
 
-            time::sleep(time::Duration::from_secs(MANAGER_DELAY_SECS)).await;
+            time::sleep(time::Duration::from_secs(self.manager_cycle_secs)).await;
         }
     }
 }

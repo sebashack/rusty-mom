@@ -4,6 +4,9 @@ port = 8082
 workers = 5
 max_blocking = 512
 keep_alive = 5
+manager_cycle_secs = 5
+life_probe_retry_delay_millis = 33
+life_probe_max_retries = 3
 moms = [{ host = "127.0.0.1", port = 50051 },
         { host = "127.0.0.2", port = 50051 },
         { host = "127.0.0.3", port = 50051 },
