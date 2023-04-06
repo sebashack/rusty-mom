@@ -378,17 +378,19 @@ impl StreamServer {
         // Note: you can base this implementation on rebuild_queue.
 
         let mut conn = self.db_pool.acquire().await;
-        let queues = crud::select_queues_by_mom(&mut conn, self.host.as_str(), self.port.into()).await;
+        let queues =
+            crud::select_queues_by_mom(&mut conn, self.host.as_str(), self.port.into()).await;
 
         for queue in queues {
-            let messages = crud::select_queue_non_expired_messages(&mut conn, &queue.label.as_str())
-            .await
-            .into_iter()
-            .map(|m| Message {
-                id: m.id.to_string(),
-                content: m.content,
-                topic: m.topic,
-            });
+            let messages =
+                crud::select_queue_non_expired_messages(&mut conn, &queue.label.as_str())
+                    .await
+                    .into_iter()
+                    .map(|m| Message {
+                        id: m.id.to_string(),
+                        content: m.content,
+                        topic: m.topic,
+                    });
 
             let mut broadcast_ends = self.broadcast_ends.lock().unwrap();
             let new_queue = Queue::new(self.buffer_size, queue.label.clone());
