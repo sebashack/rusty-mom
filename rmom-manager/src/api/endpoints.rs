@@ -17,7 +17,7 @@ async fn post_queue(
 
     if crud::select_if_queue_exists(&mut db, label.as_str()).await {
         Err((Status::BadRequest, "Queue already exists".to_string()))
-    } else if let Some((key, mom_id)) = AvailableMoMs::get_less_loaded_and_up_key(&mut db).await {
+    } else if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db).await {
         let mut lock = state.acquire(&key).await;
         let client = lock.as_mut().unwrap().get_client().unwrap();
 

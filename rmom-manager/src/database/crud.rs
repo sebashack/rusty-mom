@@ -73,7 +73,12 @@ pub async fn select_up_moms(conn: &mut PoolConnectionPtr) -> Vec<MoMRecord> {
 pub async fn select_less_loaded_and_up_mom(conn: &mut PoolConnectionPtr) -> Option<MoMRecord> {
     sqlx::query_as!(
         MoMRecord,
-        "SELECT mom.id, mom.host, mom.port, mom.is_up FROM mom LEFT JOIN queue ON mom.id = queue.mom_id WHERE mom.is_up = true GROUP BY mom.id, mom.host, mom.port, mom.is_up ORDER BY COUNT(queue.id) ASC LIMIT 1;"
+        "SELECT mom.id, mom.host, mom.port, mom.is_up \
+         FROM mom LEFT JOIN queue \
+         ON mom.id = queue.mom_id \
+         WHERE mom.is_up = true \
+         GROUP BY mom.id, mom.host, mom.port, mom.is_up \
+         ORDER BY COUNT(queue.id) ASC LIMIT 1"
     )
     .fetch_optional(conn)
     .await
