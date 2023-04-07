@@ -19,7 +19,12 @@ def main():
         while True:
             now = str(datetime.now())
             msg = f"Sports news with time {now}".encode("utf-8")
-            pusher.push(msg, "news-queue", topic="sports")
+            try:
+                pusher.push(msg, "news-queue", topic="sports")
+            except:
+                time.sleep(3)
+                _, info = mom_client.get_queue_info("news-queue")
+                pusher = Pusher(info)
             time.sleep(5)
 
     threading.Thread(target=push_sports).start()
@@ -29,7 +34,14 @@ def main():
         while True:
             now = str(datetime.now())
             msg = f"Politics news with time {now}".encode("utf-8")
-            pusher.push(msg, "news-queue", topic="politics")
+
+            try:
+                pusher.push(msg, "news-queue", topic="politics")
+            except:
+                time.sleep(3)
+                _, info = mom_client.get_queue_info("news-queue")
+                pusher = Pusher(info)
+
             time.sleep(5)
 
     threading.Thread(target=push_politics).start()
@@ -39,7 +51,13 @@ def main():
         while True:
             now = str(datetime.now())
             msg = f"Fashion news with time {now}".encode("utf-8")
-            pusher.push(msg, "news-queue", topic="fashion")
+            try:
+                pusher.push(msg, "news-queue", topic="fashion")
+            except:
+                time.sleep(3)
+                _, info = mom_client.get_queue_info("news-queue")
+                pusher = Pusher(info)
+
             time.sleep(5)
 
     threading.Thread(target=push_fashion).start()
