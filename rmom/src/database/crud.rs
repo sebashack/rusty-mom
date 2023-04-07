@@ -1,3 +1,5 @@
+use crate::database::crud::sqlx::Error;
+use sqlx::postgres::PgQueryResult;
 use sqlx::types::time::PrimitiveDateTime;
 use sqlx::types::uuid::Uuid;
 use sqlx::{self};
@@ -27,7 +29,7 @@ pub async fn insert_message(
     topic: &str,
     ttl: i64,
     content: Vec<u8>,
-) {
+) -> Result<PgQueryResult, Error> {
     let expires_at = sql_timestamp().saturating_add(Duration::seconds(ttl));
     sqlx::query!(
         "INSERT INTO message (id, queue_label, topic, expires_at, content) VALUES ($1, $2, $3, $4, $5)",
@@ -39,7 +41,6 @@ pub async fn insert_message(
     )
     .execute(conn)
     .await
-    .unwrap();
 }
 
 pub async fn select_queue_non_expired_messages(

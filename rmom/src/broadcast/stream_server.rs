@@ -89,7 +89,7 @@ impl MessageStream for StreamServer {
 
         let message_id = Uuid::new_v4();
         let mut conn = self.db_pool.acquire().await;
-        crud::insert_message(
+        if let Ok(_) = crud::insert_message(
             &mut conn,
             &message_id,
             &push.queue_label,
@@ -97,22 +97,25 @@ impl MessageStream for StreamServer {
             self.message_ttl,
             push.content.clone(),
         )
-        .await;
+        .await
+        {
+            let lock = self.broadcast_ends.lock().unwrap();
+            if let Some((_, broadcast_end)) = lock.get(&push.queue_label) {
+                let message = Message {
+                    id: message_id.to_string(),
+                    content: push.content,
+                    topic: push.topic.to_lowercase(),
+                };
 
-        let lock = self.broadcast_ends.lock().unwrap();
-        if let Some((_, broadcast_end)) = lock.get(&push.queue_label) {
-            let message = Message {
-                id: message_id.to_string(),
-                content: push.content,
-                topic: push.topic.to_lowercase(),
-            };
-
-            match broadcast_end.broadcast(message) {
-                Ok(()) => Ok(Response::new(PushOkResponse {})),
-                Err(msg) => Err(Status::new(Code::Internal, msg)),
+                match broadcast_end.broadcast(message) {
+                    Ok(()) => Ok(Response::new(PushOkResponse {})),
+                    Err(msg) => Err(Status::new(Code::Internal, msg)),
+                }
+            } else {
+                Err(Status::new(Code::NotFound, "Queue not found"))
             }
         } else {
-            Err(Status::new(Code::NotFound, "Queue not found"))
+            Err(Status::new(Code::InvalidArgument, "Invalid queue label"))
         }
     }
 
