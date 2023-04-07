@@ -34,6 +34,11 @@ class MessageStreamStub(object):
                 request_serializer=messages__pb2.DeleteQueueRequest.SerializeToString,
                 response_deserializer=messages__pb2.DeleteQueueOkResponse.FromString,
                 )
+        self.RebuildQueue = channel.unary_unary(
+                '/messages.MessageStream/RebuildQueue',
+                request_serializer=messages__pb2.RebuildQueueRequest.SerializeToString,
+                response_deserializer=messages__pb2.RebuildQueueOkResponse.FromString,
+                )
         self.CreateChannel = channel.unary_unary(
                 '/messages.MessageStream/CreateChannel',
                 request_serializer=messages__pb2.CreateChannelRequest.SerializeToString,
@@ -53,6 +58,11 @@ class MessageStreamStub(object):
                 '/messages.MessageStream/DeleteChannel',
                 request_serializer=messages__pb2.DeleteChannelRequest.SerializeToString,
                 response_deserializer=messages__pb2.DeleteChannelOkResponse.FromString,
+                )
+        self.GetHeartbeat = channel.unary_unary(
+                '/messages.MessageStream/GetHeartbeat',
+                request_serializer=messages__pb2.HeartbeatRequest.SerializeToString,
+                response_deserializer=messages__pb2.HeartbeatOkResponse.FromString,
                 )
 
 
@@ -83,6 +93,12 @@ class MessageStreamServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RebuildQueue(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CreateChannel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -102,6 +118,12 @@ class MessageStreamServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def DeleteChannel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetHeartbeat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -130,6 +152,11 @@ def add_MessageStreamServicer_to_server(servicer, server):
                     request_deserializer=messages__pb2.DeleteQueueRequest.FromString,
                     response_serializer=messages__pb2.DeleteQueueOkResponse.SerializeToString,
             ),
+            'RebuildQueue': grpc.unary_unary_rpc_method_handler(
+                    servicer.RebuildQueue,
+                    request_deserializer=messages__pb2.RebuildQueueRequest.FromString,
+                    response_serializer=messages__pb2.RebuildQueueOkResponse.SerializeToString,
+            ),
             'CreateChannel': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateChannel,
                     request_deserializer=messages__pb2.CreateChannelRequest.FromString,
@@ -149,6 +176,11 @@ def add_MessageStreamServicer_to_server(servicer, server):
                     servicer.DeleteChannel,
                     request_deserializer=messages__pb2.DeleteChannelRequest.FromString,
                     response_serializer=messages__pb2.DeleteChannelOkResponse.SerializeToString,
+            ),
+            'GetHeartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetHeartbeat,
+                    request_deserializer=messages__pb2.HeartbeatRequest.FromString,
+                    response_serializer=messages__pb2.HeartbeatOkResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -229,6 +261,23 @@ class MessageStream(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def RebuildQueue(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/RebuildQueue',
+            messages__pb2.RebuildQueueRequest.SerializeToString,
+            messages__pb2.RebuildQueueOkResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def CreateChannel(request,
             target,
             options=(),
@@ -293,5 +342,22 @@ class MessageStream(object):
         return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/DeleteChannel',
             messages__pb2.DeleteChannelRequest.SerializeToString,
             messages__pb2.DeleteChannelOkResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetHeartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/messages.MessageStream/GetHeartbeat',
+            messages__pb2.HeartbeatRequest.SerializeToString,
+            messages__pb2.HeartbeatOkResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

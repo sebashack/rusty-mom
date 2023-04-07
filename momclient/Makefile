@@ -18,12 +18,12 @@ build-proto:
 	rm -rf ${BUILD_DIR}/proto_grpc
 	mkdir -p ${BUILD_DIR}/proto_grpc
 	${PYBIN} -m grpc_tools.protoc -I${PROTO_DIR} --python_out=${BUILD_DIR}/proto_grpc --pyi_out=${BUILD_DIR}/proto_grpc --grpc_python_out=${BUILD_DIR}/proto_grpc messages.proto
-	rm -rf ${CURDIR}/src/*_pb2*
-	cp -a ${BUILD_DIR}/proto_grpc/* ${CURDIR}/src/
+	rm -rf ${CURDIR}/lib/*_pb2*
+	cp -a ${BUILD_DIR}/proto_grpc/* ${CURDIR}/lib/
 
 .PHONY: clean
 clean:
 	rm -rf ${VENV_DIR}
 	rm -rf ${BUILD_DIR}
-	rm -rf ${CURDIR}/src/__pycache__
-	rm -rf ${CURDIR}/src/*_pb2*
+	rm -rf ${CURDIR}/lib/__pycache__
+	rm -rf ${CURDIR}/lib/*_pb2*

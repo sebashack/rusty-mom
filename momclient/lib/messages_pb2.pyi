@@ -49,6 +49,14 @@ class DeleteQueueRequest(_message.Message):
     queue_label: str
     def __init__(self, queue_label: _Optional[str] = ...) -> None: ...
 
+class HeartbeatOkResponse(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class HeartbeatRequest(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
 class ListChannelsRequest(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
@@ -92,6 +100,16 @@ class Push(_message.Message):
 class PushOkResponse(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...
+
+class RebuildQueueOkResponse(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class RebuildQueueRequest(_message.Message):
+    __slots__ = ["queue_label"]
+    QUEUE_LABEL_FIELD_NUMBER: _ClassVar[int]
+    queue_label: str
+    def __init__(self, queue_label: _Optional[str] = ...) -> None: ...
 
 class SubscriptionRequest(_message.Message):
     __slots__ = ["channel_id"]
