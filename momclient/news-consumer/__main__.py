@@ -8,8 +8,10 @@ from momlib import MoMClient, Pusher, Subscriber
 
 
 def main():
+    retry_delay = 3
+    max_attempts = 3
     mom_client = MoMClient("127.0.0.1", 8082)
-    mom_info, channel_info = mom_client.create_channel("news-queue", "news")
+    mom_info, channel_info = mom_client.create_channel("news-queue", retry_delay, max_attempts, "news")
 
     # mom_client.create_queue("news-comment-queue")
 
