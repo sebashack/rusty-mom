@@ -214,11 +214,18 @@ class Pusher:
         self._grpc_channel = grpc.insecure_channel(f"{mom_info.host}:{mom_info.port}")
         self._pusher = messages_pb2_grpc.MessageStreamStub(self._grpc_channel)
 
-    def push(self, content, queue_label, topic="__none__"):
-        self._pusher.PushToQueue(
-            messages_pb2.Push(content=content, topic=topic, queue_label=queue_label)
-        )
-        print("Message pushed...")
+    def push(self, content, queue_label, topic="__none__", retry_delay=10, max_attempts=3):
+        for attempt in range(0, max_attempts):
+            try:
+                self._pusher.PushToQueue(
+                    messages_pb2.Push(content=content, topic=topic, queue_label=queue_label)
+                )
+                print("Message pushed...")
+                return
+            except Exception as e:
+                print(f"Error pushing message: {e} ")
+                time.sleep(retry_delay)
+        print(f"Max number of attempts reached.")
 
     def close(self):
         self._grpc_channel.close()
