@@ -7,7 +7,6 @@ import time
 sys.path.insert(1, "lib")
 
 from momlib import MoMClient, Pusher, Subscriber
-from server import app
 
 
 RETRY_DELAY = 2
