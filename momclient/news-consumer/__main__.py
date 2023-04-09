@@ -20,13 +20,16 @@ message_lock = threading.Lock()
 @app.route("/news")
 def get_messages():
     messages = app.config["messages_list"]
-    return render_template('messages.html', messages=messages)
+    return render_template("messages.html", messages=messages)
 
 
 def on_message(message):
     with message_lock:
         if message["id"] not in map(lambda m: m["id"], message_list):
-            message_list.append({"id": message["id"], "content": message["content"].decode("UTF-8")})
+            message_list.append(
+                {"id": message["id"], "content": message["content"].decode("UTF-8")}
+            )
+
 
 def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_attempts):
     def retry(i):
@@ -45,6 +48,7 @@ def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_att
                 return retry(k + 1)
 
     return retry(0)
+
 
 def main():
     mom_client = MoMClient("127.0.0.1", 8082)
