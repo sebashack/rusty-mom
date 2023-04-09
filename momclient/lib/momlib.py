@@ -175,7 +175,6 @@ class Subscriber:
                     res = await message_stream.read()
                     if res == grpc.aio.EOF:
                         break
-                    content = res.content.decode("utf-8")
-                    on_message(content)
+                    on_message({"id": res.id, "content": res.content})
 
         asyncio.run(run())

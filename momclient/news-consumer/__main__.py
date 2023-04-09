@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 import sys
 import threading
 import time
@@ -20,21 +20,38 @@ message_lock = threading.Lock()
 @app.route("/news")
 def get_messages():
     messages = app.config["messages_list"]
-    return jsonify(messages)
+    return render_template('messages.html', messages=messages)
 
 
 def on_message(message):
     with message_lock:
-        message_list.append(message)
+        if message["id"] not in map(lambda m: m["id"], message_list):
+            message_list.append({"id": message["id"], "content": message["content"].decode("UTF-8")})
 
+def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_attempts):
+    def retry(i):
+        k = i
+        if i > max_attempts:
+            raise Exception("Could not establish connection with MoM Server")
+        else:
+            print(f"Connecting consumer, attempt {i + 1}")
+            try:
+                mom_info, channel_info = mom_client.create_channel(queue_label, topic)
+                subscriber = Subscriber(mom_info, channel_info)
+                k = -1
+                subscriber.consume(on_message)
+            except Exception as e:
+                print(f"Excepcion: {e}")
+                time.sleep(retry_delay_secs)
+                return retry(k + 1)
+
+    return retry(0)
 
 def main():
     mom_client = MoMClient("127.0.0.1", 8082)
-    mom_info, channel_info = mom_client.create_channel("news-queue", topic="news")
 
     def consume_news():
-        subscriber = Subscriber(mom_info, channel_info)
-        subscriber.consume(on_message)
+        consume_with_retry(mom_client, "news-queue", "news", RETRY_DELAY, MAX_ATTEMPTS)
 
     threading.Thread(target=consume_news).start()
 
