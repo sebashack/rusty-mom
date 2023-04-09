@@ -20,7 +20,7 @@ message_lock = threading.Lock()
 @app.route("/news")
 def get_messages():
     messages = app.config["messages_list"]
-    return render_template("messages.html", messages=messages)
+    return render_template("news.html", messages=messages)
 
 
 def on_message(message):
