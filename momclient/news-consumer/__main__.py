@@ -41,7 +41,6 @@ def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_att
                 k = -1
                 subscriber.consume(on_message)
             except Exception as e:
-                print(f"Excepcion: {e}")
                 time.sleep(retry_delay_secs)
                 return retry(k + 1)
 
