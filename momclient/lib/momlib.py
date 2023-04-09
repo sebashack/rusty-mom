@@ -141,6 +141,7 @@ class Pusher:
     def __init__(self, mom_info):
         self._grpc_channel = grpc.insecure_channel(f"{mom_info.host}:{mom_info.port}")
         self._pusher = messages_pb2_grpc.MessageStreamStub(self._grpc_channel)
+        self._pusher.GetHeartbeat(messages_pb2.HeartbeatRequest())
 
     def push(self, content, queue_label, topic="__none__"):
         self._pusher.PushToQueue(

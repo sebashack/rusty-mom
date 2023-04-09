@@ -12,10 +12,11 @@ MAX_ATTEMPTS = 5
 PUSH_DELAY_SECS = 5
 
 
-def restablish_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
+def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
     def retry(i):
+        print(f"Restablishing queue, attempt {i + 1}")
         if i >= max_attempts:
-            raise Exception("Could not restablish connection with MoM Server")
+            raise Exception("Could not establish connection with MoM Server")
         else:
             try:
                 _, info = mom_client.get_queue_info(queue_label)
@@ -34,14 +35,16 @@ def main():
     _, mom_info = mom_client.get_queue_info("news-queue")
 
     def push_news():
-        pusher = Pusher(mom_info)
+        pusher = pusher = create_queue_pusher(
+            mom_client, "news-queue", RETRY_DELAY_SECS, MAX_ATTEMPTS
+        )
         while True:
             now = str(datetime.now())
             msg = f"News with time {now}".encode("utf-8")
             try:
                 pusher.push(msg, "news-queue", topic="news")
             except:
-                pusher = restablish_queue_pusher(
+                pusher = create_queue_pusher(
                     mom_client, "news-queue", RETRY_DELAY_SECS, MAX_ATTEMPTS
                 )
             time.sleep(PUSH_DELAY_SECS)
