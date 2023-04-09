@@ -9,6 +9,7 @@ from momlib import MoMClient, Pusher, Subscriber
 
 RETRY_DELAY_SECS = 2
 MAX_ATTEMPTS = 5
+PUSH_DELAY_SECS = 5
 
 
 def restablish_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
@@ -43,7 +44,7 @@ def main():
                 pusher = restablish_queue_pusher(
                     mom_client, "news-queue", RETRY_DELAY_SECS, MAX_ATTEMPTS
                 )
-            time.sleep(5)
+            time.sleep(PUSH_DELAY_SECS)
 
     threading.Thread(target=push_news).start()
 
