@@ -239,7 +239,7 @@ class Subscriber:
         self._mom_info = mom_info
         self._channel_id = channel.id
 
-    def consume(self):
+    def consume(self, on_message):
         async def run():
             async with grpc.aio.insecure_channel(
                 f"{self._mom_info.host}:{self._mom_info.port}"
@@ -254,6 +254,6 @@ class Subscriber:
                     if res == grpc.aio.EOF:
                         break
                     content = res.content.decode("utf-8")
-                    print(f"{(res.id, res.topic)}: {content}")
+                    on_message(content)
 
         asyncio.run(run())
