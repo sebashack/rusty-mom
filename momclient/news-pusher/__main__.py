@@ -28,9 +28,9 @@ def restablish_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attem
 
 def main():
     mom_client = MoMClient("127.0.0.1", 8082)
-    mom_client.create_queue("news-queue", RETRY_DELAY, MAX_ATTEMPTS)
+    mom_client.create_queue("news-queue")
 
-    _, mom_info = mom_client.get_queue_info("news-queue", RETRY_DELAY, MAX_ATTEMPTS)
+    _, mom_info = mom_client.get_queue_info("news-queue")
 
     def push_news():
         pusher = Pusher(mom_info)

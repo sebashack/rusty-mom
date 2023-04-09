@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>News</title>
+    </head>
+    <body>
+        <h1>News:</h1>
+        <ul>
+            {% for message in messages %}
+            <li>{{ message[0] }} - {{ message[1} }}</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
