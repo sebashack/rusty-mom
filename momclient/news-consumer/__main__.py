@@ -12,6 +12,7 @@ from momlib import MoMClient, Pusher, Subscriber
 RETRY_DELAY = 2
 MAX_ATTEMPTS = 5
 
+app = Flask(__name__)
 message_list = []
 message_lock = threading.Lock()
 
@@ -37,7 +38,6 @@ def main():
 
     threading.Thread(target=consume_news).start()
 
-    app = Flask(__name__)
     app.config["messages_list"] = message_list
     app.run()
 
