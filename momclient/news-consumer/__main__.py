@@ -20,12 +20,14 @@ def get_messages():
     messages = app.config["messages_list"]
     return render_template("news.html", messages=messages)
 
+
 def on_message(message):
     with message_lock:
         if message["id"] not in map(lambda m: m["id"], message_list):
             message_list.append(
                 {"id": message["id"], "content": message["content"].decode("UTF-8")}
             )
+
 
 def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_attempts):
     def retry(i):
@@ -45,6 +47,7 @@ def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_att
 
     return retry(0)
 
+
 def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
     def retry(i):
         if i >= max_attempts:
@@ -60,6 +63,7 @@ def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts)
 
     return retry(0)
 
+
 def main(argv):
     parser = argparse.ArgumentParser(description="File service API gateway")
     parser.add_argument("config", type=str, help="Path to config file")
@@ -69,11 +73,11 @@ def main(argv):
 
     conf = json.loads(open(config_path, "r").read())
 
-    RETRY_DELAY = conf['retry_delay']
-    MAX_ATTEMPTS = conf['max_attempts']
-    PUSH_DELAY_SECS = conf['push_delay_secs']
+    RETRY_DELAY = conf["retry_delay"]
+    MAX_ATTEMPTS = conf["max_attempts"]
+    PUSH_DELAY_SECS = conf["push_delay_secs"]
 
-    mom_client = MoMClient(conf['mom_manager_host'], conf['mom_manager_port'])
+    mom_client = MoMClient(conf["mom_manager_host"], conf["mom_manager_port"])
     mom_client.create_queue("comments-queue")
 
     def push_news():
@@ -98,7 +102,7 @@ def main(argv):
     threading.Thread(target=consume_news).start()
 
     app.config["messages_list"] = message_list
-    app.run(host=conf['host'], port=conf['port'])
+    app.run(host=conf["host"], port=conf["port"])
 
 
 if __name__ == "__main__":

@@ -11,8 +11,6 @@ service MessageStream {
   rpc DeleteQueue (DeleteQueueRequest) returns (DeleteQueueOkResponse) {}
   rpc RebuildQueue (RebuildQueueRequest) returns (RebuildQueueOkResponse) {}
   rpc CreateChannel (CreateChannelRequest) returns (CreateChannelResponse) {}
-  rpc ListQueues (ListQueuesRequest) returns (ListQueuesResponse) {}
-  rpc ListChannels (ListChannelsRequest) returns (ListChannelsResponse) {}
   rpc DeleteChannel (DeleteChannelRequest) returns (DeleteChannelOkResponse) {}
   rpc GetHeartbeat (HeartbeatRequest) returns (HeartbeatOkResponse) {}
 }
