@@ -4,7 +4,6 @@ import argparse
 import json
 import threading
 import time
-
 from flask import Flask, render_template
 
 sys.path.insert(1, "lib")
@@ -15,6 +14,7 @@ app = Flask(__name__)
 message_list = []
 message_lock = threading.Lock()
 
+
 @app.route("/comments")
 def get_messages():
     messages = app.config["messages_list"]
@@ -23,7 +23,9 @@ def get_messages():
 def on_message(message):
     with message_lock:
         if message["id"] not in map(lambda m: m["id"], message_list):
-            message_list.append({"id": message["id"], "content": message["content"].decode("UTF-8")})
+            message_list.append(
+                {"id": message["id"], "content": message["content"].decode("UTF-8")}
+            )
 
 def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_attempts):
     def retry(i):
@@ -72,10 +74,7 @@ def main(argv):
     PUSH_DELAY_SECS = conf['push_delay_secs']
 
     mom_client = MoMClient(conf['mom_manager_host'], conf['mom_manager_port'])
-
     mom_client.create_queue("news-queue")
-
-    _, mom_info = mom_client.get_queue_info("news-queue")
 
     def push_news():
         pusher = create_queue_pusher(

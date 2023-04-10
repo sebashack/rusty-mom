@@ -1,10 +1,10 @@
 from datetime import datetime
-from flask import Flask, render_template
 import sys
 import argparse
 import json
 import threading
 import time
+from flask import Flask, render_template
 
 sys.path.insert(1, "lib")
 
@@ -15,26 +15,10 @@ message_list = []
 message_lock = threading.Lock()
 
 
-def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
-    def retry(i):
-        if i >= max_attempts:
-            raise Exception("Could not establish connection with MoM Server")
-        else:
-            print(f"Connecting pusher to queue, attempt {i + 1}")
-            try:
-                _, info = mom_client.get_queue_info(queue_label)
-                return Pusher(info)
-            except:
-                time.sleep(retry_delay_secs)
-                return retry(i + 1)
-
-    return retry(0)
-
 @app.route("/news")
 def get_messages():
     messages = app.config["messages_list"]
     return render_template("news.html", messages=messages)
-
 
 def on_message(message):
     with message_lock:
@@ -42,7 +26,6 @@ def on_message(message):
             message_list.append(
                 {"id": message["id"], "content": message["content"].decode("UTF-8")}
             )
-
 
 def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_attempts):
     def retry(i):
@@ -62,6 +45,20 @@ def consume_with_retry(mom_client, queue_label, topic, retry_delay_secs, max_att
 
     return retry(0)
 
+def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts):
+    def retry(i):
+        if i >= max_attempts:
+            raise Exception("Could not establish connection with MoM Server")
+        else:
+            print(f"Connecting pusher to queue, attempt {i + 1}")
+            try:
+                _, info = mom_client.get_queue_info(queue_label)
+                return Pusher(info)
+            except:
+                time.sleep(retry_delay_secs)
+                return retry(i + 1)
+
+    return retry(0)
 
 def main(argv):
     parser = argparse.ArgumentParser(description="File service API gateway")
