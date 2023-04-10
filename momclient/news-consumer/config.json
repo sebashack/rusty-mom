@@ -1,0 +1,9 @@
+{
+  "host": "127.0.0.1",
+  "port": 5000,
+  "mom_manager_host": "127.0.0.1",
+  "mom_manager_port": 8082, 
+  "retry_delay": 2,
+  "max_attempts": 5,
+  "push_delay_secs": 5
+}

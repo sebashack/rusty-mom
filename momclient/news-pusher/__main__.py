@@ -1,5 +1,7 @@
 from datetime import datetime
 import sys
+import argparse
+import json
 import threading
 import time
 
@@ -8,11 +10,6 @@ from flask import Flask, render_template
 sys.path.insert(1, "lib")
 
 from momlib import MoMClient, Pusher, Subscriber
-
-
-RETRY_DELAY = 2
-MAX_ATTEMPTS = 5
-PUSH_DELAY_SECS = 5
 
 app = Flask(__name__)
 message_list = []
@@ -61,8 +58,21 @@ def create_queue_pusher(mom_client, queue_label, retry_delay_secs, max_attempts)
 
     return retry(0)
 
-def main():
-    mom_client = MoMClient("127.0.0.1", 8082)
+def main(argv):
+    parser = argparse.ArgumentParser(description="File service API gateway")
+    parser.add_argument("config", type=str, help="Path to config file")
+    args = parser.parse_args(argv[1:])
+
+    config_path = args.config
+
+    conf = json.loads(open(config_path, "r").read())
+
+    RETRY_DELAY = conf['retry_delay']
+    MAX_ATTEMPTS = conf['max_attempts']
+    PUSH_DELAY_SECS = conf['push_delay_secs']
+
+    mom_client = MoMClient(conf['mom_manager_host'], conf['mom_manager_port'])
+
     mom_client.create_queue("news-queue")
 
     _, mom_info = mom_client.get_queue_info("news-queue")
@@ -89,7 +99,7 @@ def main():
     threading.Thread(target=consume_comments).start()
 
     app.config["messages_list"] = message_list
-    app.run()
+    app.run(host=conf['host'], port=conf['port'])
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
