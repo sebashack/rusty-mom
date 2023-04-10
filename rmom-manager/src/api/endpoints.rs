@@ -7,24 +7,24 @@ use crate::database::connection::DbConnection;
 use crate::database::crud::{self, ChannelInfo, QueueInfo};
 use crate::manager::mom::AvailableMoMs;
 
-#[post("/queues/<label>")]
+#[post("/queues/<queue_label>")]
 async fn post_queue(
     mut db: DbConnection,
     state: &State<AvailableMoMs>,
-    label: String,
+    queue_label: String,
 ) -> Result<(), (Status, String)> {
-    let label = label.to_lowercase();
+    let queue_label = queue_label.to_lowercase();
 
-    if crud::select_if_queue_exists(&mut db, label.as_str()).await {
+    if crud::select_if_queue_exists(&mut db, queue_label.as_str()).await {
         Err((Status::BadRequest, "Queue already exists".to_string()))
     } else if let Some((key, mom_id)) = AvailableMoMs::get_random_up_key(&mut db).await {
         let mut lock = state.acquire(&key).await;
         let client = lock.as_mut().unwrap().get_client().unwrap();
 
-        match client.create_queue(label.as_str()).await {
+        match client.create_queue(queue_label.as_str()).await {
             Ok(_) => {
                 let queue_id = Uuid::new_v4();
-                crud::insert_queue(&mut db, &queue_id, label.as_str(), &mom_id).await;
+                crud::insert_queue(&mut db, &queue_id, queue_label.as_str(), &mom_id).await;
                 Ok(())
             }
             Err(err) => Err((Status::BadRequest, err)),
@@ -34,13 +34,13 @@ async fn post_queue(
     }
 }
 
-#[delete("/queues/<label>")]
+#[delete("/queues/<queue_label>")]
 async fn delete_queue(
     mut db: DbConnection,
     state: &State<AvailableMoMs>,
-    label: String,
+    queue_label: String,
 ) -> Result<(), (Status, String)> {
-    if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
+    if let Some(queue_record) = crud::select_queue(&mut db, queue_label.as_str()).await {
         if queue_record.mom_id.is_none() {
             return Err((Status::NotFound, "MoM not available".to_string()));
         }
@@ -51,7 +51,7 @@ async fn delete_queue(
             let client = lock.as_mut().unwrap().get_client().unwrap();
 
             crud::delete_queue(&mut db, &queue_record.id).await;
-            match client.delete_queue(label.as_str()).await {
+            match client.delete_queue(queue_label.as_str()).await {
                 Ok(_) => Ok(()),
                 Err(err) => Err((Status::BadRequest, err)),
             }
@@ -144,17 +144,17 @@ async fn delete_channel(
     }
 }
 
-#[put("/queues/<label>/channels/<topic>", format = "json")]
+#[put("/queues/<queue_label>/channels/<topic>", format = "json")]
 async fn put_channel(
     mut db: DbConnection,
     state: &State<AvailableMoMs>,
-    label: String,
+    queue_label: String,
     topic: String,
 ) -> Result<Json<ChannelInfo>, (Status, String)> {
     let topic = topic.to_lowercase();
-    let label = label.to_lowercase();
+    let queue_label = queue_label.to_lowercase();
 
-    if let Some(queue_record) = crud::select_queue(&mut db, label.as_str()).await {
+    if let Some(queue_record) = crud::select_queue(&mut db, queue_label.as_str()).await {
         if queue_record.mom_id.is_none() {
             return Err((Status::NotFound, "MoM not available".to_string()));
         }
@@ -164,7 +164,10 @@ async fn put_channel(
             let mut lock = state.acquire(&key).await;
             let client = lock.as_mut().unwrap().get_client().unwrap();
 
-            match client.create_channel(label.as_str(), topic.as_str()).await {
+            match client
+                .create_channel(queue_label.as_str(), topic.as_str())
+                .await
+            {
                 Ok(channel_id) => {
                     let chan_uuid = Uuid::parse_str(channel_id.as_str()).unwrap();
                     crud::insert_channel(&mut db, &chan_uuid, &queue_record.id, topic.as_str())

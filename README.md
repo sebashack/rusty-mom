@@ -35,7 +35,6 @@ Our MoM implementation lacks the following features:
 - There is no support for users, authentication and authorization.
 - There is no encryption support for messages.
 
-
 ## 2) Architecture
 
 The following diagram shows a general view of our system:
@@ -115,19 +114,19 @@ This lab project was developed and tested in Ubuntu 22.04.
 *Manager*
 
 The manager was implemented with the [Rust](https://www.rust-lang.org) programming language with compiler version `rustc 1.70.0-nightly`.
-All of the dependencies together with their versions are specified in the [Cargo.toml](https://github.com/sebashack/rusty-mom/blob/readme/rmom-manager/Cargo.toml)
+All of the dependencies together with their versions are specified in the [Cargo.toml](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/Cargo.toml)
 file in the `rmom-manager` subproject.
 
 *MoM server*
 
 The mom server was implemented with the [Rust](https://www.rust-lang.org) programming language with compiler version `rustc 1.70.0-nightly`.
-All of the dependencies together with their versions are specified in the [Cargo.toml](https://github.com/sebashack/rusty-mom/blob/readme/rmom/Cargo.toml)
+All of the dependencies together with their versions are specified in the [Cargo.toml](https://github.com/sebashack/rusty-mom/blob/main/rmom/Cargo.toml)
 file in the `rmom` subproject.
 
 *Example clients*
 
 The example clients were implemented in Python 3.10.6. The list of dependencies together with their versions are specified
-in the [requirements.txt](https://github.com/sebashack/rusty-mom/blob/readme/momclient/requirements.txt) file in the `momclient` subproject.
+in the [requirements.txt](https://github.com/sebashack/rusty-mom/blob/main/momclient/requirements.txt) file in the `momclient` subproject.
 
 
 ### 3.3) Dir tree
@@ -215,7 +214,7 @@ rusty-mom
 
 #### 3.4.1) System dependencies
 
-To install the dependencies necessary to build and work on this project execute the [first-time-install.sh](https://github.com/sebashack/rusty-mom/blob/readme/first-time-install.sh) script at the root of this repository:
+To install the dependencies necessary to build and work on this project execute the [first-time-install.sh](https://github.com/sebashack/rusty-mom/blob/main/first-time-install.sh) script at the root of this repository:
 
 ```
 ./first-time-install.sh
@@ -224,7 +223,7 @@ To install the dependencies necessary to build and work on this project execute 
 
 #### 3.4.2) PostgreSQL and migrations
 
-This project requires PostgreSQL 12. To launch a docker container execute the [service.sh](https://github.com/sebashack/rusty-mom/blob/readme/docker/service.sh)
+This project requires PostgreSQL 12. To launch a docker container execute the [service.sh](https://github.com/sebashack/rusty-mom/blob/main/docker/service.sh)
 script at the `docker` subdirectory:
 
 ```
@@ -233,7 +232,7 @@ cd docker
 
 ```
 
-To run the database migrations, execute the [run.sh](https://github.com/sebashack/rusty-mom/blob/readme/migrations/run.sh) at the
+To run the database migrations, execute the [run.sh](https://github.com/sebashack/rusty-mom/blob/main/migrations/run.sh) at the
 `migrations` subdirectory:
 
 ```
@@ -312,7 +311,7 @@ cd rmom-manager
 RUST_LOG=INFO cargo run
 ```
 
-A development configuration file for this service is located at [rmom-manager/Rocket.toml](https://github.com/sebashack/rusty-mom/blob/readme/rmom-manager/Rocket.toml):
+A development configuration file for this service is located at [rmom-manager/Rocket.toml](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/Rocket.toml):
 
 ```
 [default]
@@ -421,8 +420,6 @@ where the gRPC communication protocol has been defined. The remote call procedur
 - `DeleteChannel`: Given a `channel_id`remove the channel identified by it from the queue where it is hosted.
 - `DeleteQueue`: Given a `queue_label` remove the queue identified by it from the MoM where it is hosted. When a queue
                  is deleted, all of the messages attached to it are also removed both from the MoM server and database.
-- `ListChannels`: Get the ids of all channels that have been created and are currently available in a specific MoM server.
-- `ListQueues`: Get the labels of all queues that have been created and are currently available in a specific MoM server.
 - `PushToQueue`: Push a message with a topic to a specific queue hosted by a MoM server. If the topic is not intended to have a topic,
                  the special "__none__" reserved word can be used. This operation is intended to be used by clients of
                  this MoM system.
@@ -434,3 +431,172 @@ where the gRPC communication protocol has been defined. The remote call procedur
 - `RebuildQueue`: This operation is used by the rmom-manager to request an available MoM server to restore a queue identified
                   by a `queue_label`. After this operation is completed successfully, the MoM server becomes the new owner
                   of that queue.
+
+
+### 3.5.2) rmom-manager
+
+`rmom-manager` is the coordination and routing layer for our MoM system, that is, it is in charge of keeping track of which
+MoM servers are available and which are not; restoring queues on available servers if possible; and providing clients with
+an administrative API to manage queues and channels and to get the information necessary to create connections for pushing
+to queues and subscribing to channels. To accomplish this, the `rmom-manager` has three major components, namely, the gRPC
+client interface to the MoM servers, the REST API exposed to clients and the management task.
+
+The gRPC client interface is defined in [rmom-manager/src/client/endpoints.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/client/endpoints.rs),
+and it defines handlers for the operations `CreateQueue`, `DeleteQueue`, `RebuildQueue`, `CreateChannel`, `DeleteChannel`, and `GetHeartbeat`.
+This client is intended to address an specific MoM server the manager has been able to establish a connection with. Now,
+taking into account that multiple MoM servers are registered in order to increase fault tolerance and balance the load, the manager
+implementes keeps track of multiple connections at once via the [AvailableMoMs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/manager/mom.rs#L101)
+data structure:
+
+```
+pub struct RegisteredMoM {
+    connection: Option<Client>,
+    pub host: String,
+    pub port: i32,
+}
+
+...
+
+type Host = String;
+type Port = i32;
+type Key = (Host, Port);
+
+...
+
+pub struct AvailableMoMs {
+    moms: HashMap<Key, Arc<Mutex<RegisteredMoM>>>,
+}
+```
+
+`AvailableMoMs` is an immutable HashMap that stores a reference to gRPC clients that where registered in the `Rocket.toml`
+config file. Notice that the references to these clients are wrapped within a mutex in order to prevent race conditions and
+synchronize their access.
+
+The REST API is defined at [rmom-manager/src/api/endpoints.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/api/endpoints.rs)
+and it defines the following routes:
+
+- `POST /queues/<queue_label>`: Given a unique queue `queue_label`, create a queue in some available MoM in `AvailableMoMs`. Notice
+                          that the available MoM will be chosen randomly. Thew new queue will be also registered in database
+                          and associated to the MoM server.
+- `DELETE /queues/<queue_label>`: Given a `queue_label`, delete the queue identified by it from the host MoM server and from database.
+- `GET /queues/<queue_label>`: Given a `queue_label`, get the MoM server information necessary to push data to the queue identified by it, namely,
+                               `{ label: String, host: String, port: int }`.
+- `GET /queues`: Get a list of all queues created thus far.
+- `GET /queue/<queue_label>/topics`: Get a list of all the different topics created on a specific queue thus far.
+- `GET /channels`: Get a list of all channels created thus far.
+- `GET /channels/<channel_id>`: Given a `channel_id`, get the MoM server information necessary to subscribe to that channel, namely,
+                                `{ id: String, host: String, port: int }`
+- `DELETE /channels/<channel_id>`: Given a `channel_id`, delete the channel identified by it. Notice that it will be removed both
+                                   from the MoM queue hosting and database.
+- `PUT /queues/<queue_label>/channels/<topic>`: Given a `queue_label` and a `topic`, create a channel on the queue identified by
+                                                `queue_label`. If the channel is not intended to have a topic, the special "__none__"
+                                                reserved word must be used as a topic.
+
+The management task is implemented at [rmom-manager/src/manager/mod.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/manager/mod.rs). Its
+data structure is:
+
+```
+pub struct Manager {
+    moms: AvailableMoMs,
+    db_pool: Pool<Postgres>,
+    manager_cycle_secs: u64,
+    life_probe_max_retries: u16,
+    life_probe_retry_delay_millis: u64,
+}
+```
+
+and implements the `run()` method which spawns a task that is constantly sending life probes to the MoMs registered in `AvailableMoMs`. If the
+life probe fails for a number of attempts, the manager assumes the MoM is not available, and for each of the queues that MoM server
+was hosting, the manager will pick the available MoM with the least amount of hosted queues, and will dispatch a RebuildQueue request to it.
+If the available MoM could restore the queue successfully, the ownership of the queue will be updated in database. This management
+task runs periodically every `manager_cycle_secs` on a separate thread. The manager also implements the `restore_queues()`
+operation that does something similar to the `run()` task, but it is only intended to restore any queues when the manager is
+booted, which is useful for those cases when the manager was down and some of the MoMs also went down during that period.
+
+### 3.5.3) rmom
+
+`rmom` is the service intended to host queues and channels, and to broadcast messages over those queues. The main components
+of `rmom` are its broadcast queue implementation and the gRPC server that implements the `messages.proto` specification.
+
+The broadcast queue implementation can be found at [rmom/src/broadcast/queue.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom/src/broadcast/queue.rs)
+which is basically an adaptation of a `Multiple Producer, Multiple Consumer` queue offered by this library: https://github.com/smol-rs/async-broadcast.
+
+In our interface, whenever we create a Queue, we are creating instances of the receiver and sender ends to that queue:
+
+```
+pub struct Queue {
+    label: QueueLabel,
+    w: Sender<Result<Message, Status>>,
+    r: Receiver<Result<Message, Status>>,
+}
+```
+
+One of the important methods for a `Queue` is `duplicate_channel` which, given an optional topic, returns a `ChannelReceiver` endpoint
+from which clients can get an stream of data:
+
+```
+pub struct ChannelReceiver {
+    pub id: ChannelId,
+    pub topic: Option<String>,
+    pub receiver: Receiver<Result<Message, Status>>,
+}
+```
+
+The other important method is `get_broadcast_end` which returns and endpoint where new messages can be pushed and broadcast
+through that queue.
+
+The gRPC server implementation can be found at [rmom/src/broadcast/stream_server.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom/src/broadcast/stream_server.rs).
+The data structure that contains the server's state is:
+
+```
+pub struct StreamServer {
+    host: String,
+    port: u16,
+    external_host: String,
+    external_port: u16,
+    channel_receivers: Arc<Mutex<HashMap<ChannelId, (ChannelReceiver, QueueLabel)>>>,
+    broadcast_ends: Arc<Mutex<HashMap<QueueLabel, (Queue, BroadcastEnd)>>>,
+    buffer_size: usize,
+    message_ttl: i64,
+    db_pool: DbPool,
+}
+```
+
+It keeps track of the channels and queues in `channel_receivers` and `broadcast_ends`, respectively. Notice that for each
+`Queue` only one `BroadcastEnd` is stored and its access is synchronized by a Mutex. Access to `ChannelReceivers` is also
+synchronized via a Mutex. The `StreamServer` also has a DbPool from which database connections can be acquired. The database
+is used to backup messages and to retrieve messages when a `Queue` needs to be restored. Additionally, `StreamServer` implemented
+all of the RPC handlers specified in `messages.proto`, but we will only mention some of the outstanding methods here:
+
+- `async fn push_to_queue(&self, push: Request<Push>) -> Result<Response<PushOkResponse>, Status>`: Whenever a `Push` request
+  is received (`message Push { bytes content = 1; string topic = 2; string queue_label = 3; }`), this method will access the queue
+  identified by `queue_label` in `broadcast_ends`, and broadcast a `Message` (`message Message { string id = 1; bytes content = 2; string topic = 3; }`)
+  on that queue. `Push` notifications are also stored in database with an expiration given by a TTL in order to enable
+  queue restoring in case of failures.
+
+- `async fn subscribe_to_channel(&self, req: Request<SubscriptionRequest>,) -> Result<Response<Self::SubscribeToChannelStream>, Status>`: Whenever a
+  `SubscriptionRequest` is received (`message SubscriptionRequest { string channel_id = 1; }`), the `ChannelReceiver` identified with
+  `channel_id` will be retrieved from `channel_receivers`. This `ChannelReceiver` is turned into a data stream and in case a topic
+  was specified in the receiver, the messages that don't match it won't be delivered to the consumer. If there is no topic,
+  all messages, regardless of the topic, will be delivered.
+
+- `async fn get_heartbeat(&self, _request: Request<HeartbeatRequest>) -> Result<Response<HeartbeatOkResponse>, Status>`: This
+  simple operation is used by the manager to detect whether the connection with this MoM server is available or not.
+
+
+### 3.5.3) momclient example app
+
+`momclient` is just a simple example application that uses our MoM system. It simulates a scenario where one server pushes
+`news` to a `news-queue`, and another server consumes the news on that queue to be displayed on a web page. The latter, in turn,
+pushes `comments` on those news to a `comments-queue` which are consumed by the former which also displays those comments
+on a web page:
+
+![example-arch](assets/example-arch.png)
+
+The example servers are implemented via a rudimentary `momlib` client module that was implemented in order for client
+applications to easily interface our system. This module can be found at [momclient/lib/momlib.py](https://github.com/sebashack/rusty-mom/blob/main/momclient/lib/momlib.py).
+
+The two example applications can be found at:
+
+- https://github.com/sebashack/rusty-mom/tree/main/momclient/news-consumer
+- https://github.com/sebashack/rusty-mom/tree/main/momclient/news-pusher
