@@ -155,6 +155,8 @@ rusty-mom
 │   │       └── news.html
 │   ├── news-pusher
 │   │   └── __main__.py
+│   │   └── templates
+│   │       └── comments.html
 │   └── requirements.txt
 ├── protos
 │   └── messages.proto
