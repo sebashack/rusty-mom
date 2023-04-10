@@ -85,7 +85,7 @@ def main(argv):
         )
         while True:
             now = str(datetime.now())
-            msg = f"Comments with time {now}".encode("utf-8")
+            msg = f"Comment with time {now}".encode("utf-8")
             try:
                 pusher.push(msg, "comments-queue", topic="comments")
             except:

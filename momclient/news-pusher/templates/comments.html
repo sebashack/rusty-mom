@@ -3,47 +3,64 @@
   <head>
     <title>Comments</title>
     <style>
-        body {
-        font-family: 'Open Sans', sans-serif;
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
         font-size: 16px;
         line-height: 1.6;
-        background-color: #f2f2f2;
-        }
+      }
 
-        h1 {
+      h1 {
         font-size: 36px;
         font-weight: bold;
-        color: #444;
-        text-align: left;
-        }
+        color: #333;
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 20px;
+      }
 
-        table {
-        border-collapse: collapse;
-        width: 100%;
-        }
+      table {
+        width: 85%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        margin: 0 auto;
+      }
 
-        th, td {
+      th, td {
         padding: 12px;
         text-align: left;
-        border-bottom: 1px solid #ccc;
-        }
+        border: 1px solid #ddd;
+      }
 
-        th {
-        background-color: #ddd;
+      th {
+        background-color: #85929E;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 14px;
+        letter-spacing: 1px;
+        border: 2px solid #ddd;
+      }
+
+      tbody tr:nth-child(odd) {
+        background-color: #F8F8F8;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #F5F5F5;
+      }
+
+      tbody tr:hover {
+        background-color: #EEE;
+      }
+
+      td:first-child {
         font-weight: bold;
-        }
-
-        tr:nth-child(odd) {
-        background-color: #E9FFF5;
-        }
-
-        tr:nth-child(even) {
-        background-color: #FEFFEE;
-        }
-
-        tr:hover {
-        background-color: #ddd;
-        }
+      }
     </style>
   </head>
   <body>
