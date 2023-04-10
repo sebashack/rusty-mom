@@ -599,3 +599,40 @@ The two example applications can be found at:
 
 - https://github.com/sebashack/rusty-mom/tree/main/momclient/news-consumer
 - https://github.com/sebashack/rusty-mom/tree/main/momclient/news-pusher
+
+
+## 4) Deployment
+
+This project was deployed in 5 EC2 instances on the AWS academy cloud:
+
+![ec2-machines](assets/ec2-machines.png)
+
+The deployment was performed by cloning the repository on the machines and running a subset of the build scripts  already
+mentioned above. The PostgreSQL database was released in its own container with docker-compose. Also, the configuration files
+were properly setup for a production environment.
+
+Systemd files where implemented in order to initialize the services when the instances are booted. A copy of
+these files can be seen [here](systemd).
+
+Finally, once all of the machines have been initialized, it should be possible to see the web pages of both the `news-consumer`
+and the `news-pusher` on some web browser via the dynamic public IP that is allocated for the `project1-clients` machine. For example,
+in the screenshot above, the public IP turned out to be `3.91.184.128`. Thus, the applications should be visible on:
+
+- `news-pusher`: http://3.91.184.128:8081/news
+- `news-consumer`: http://3.91.184.128:8080/comments
+
+The web pages should look like this:
+
+![ec2-machines](assets/news-pusher-web.png)
+![ec2-machines](assets/news-consumer-web.png)
+
+And on refreshing the browser, you should be able to see how new messages are added to the list.
+
+
+## 5) References
+
+- https://grpc.io/docs/languages/python/basics
+- https://doc.rust-lang.org/stable/book/
+- https://rocket.rs/v0.5-rc/guide/
+- https://github.com/smol-rs/async-broadcast
+- https://docs.rs/tonic/latest/tonic

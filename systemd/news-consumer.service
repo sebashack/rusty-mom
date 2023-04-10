@@ -1,0 +1,12 @@
+[Unit]
+Description=News consumer service
+
+[Service]
+User=root
+WorkingDirectory=/home/ubuntu/rusty-mom/momclient
+ExecStart=make run-news-consumer
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=rmom-manager service
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/rusty-mom/rmom-manager
+Environment="RUST_LOG=info"
+ExecStart=/home/ubuntu/.cargo/bin/cargo run --release
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

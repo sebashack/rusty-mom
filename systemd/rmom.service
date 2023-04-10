@@ -1,0 +1,13 @@
+[Unit]
+Description=rmom service grpc
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/rusty-mom/rmom
+Environment="RUST_LOG=info"
+ExecStart=/home/ubuntu/.cargo/bin/cargo run --release mom.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
