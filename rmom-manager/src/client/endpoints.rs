@@ -4,7 +4,7 @@ use tonic::Code;
 use crate::messages::message_stream_client::MessageStreamClient;
 use crate::messages::{
     CreateChannelRequest, CreateQueueRequest, DeleteChannelRequest, DeleteQueueRequest,
-    HeartbeatRequest, ListChannelsRequest, ListQueuesRequest, RebuildQueueRequest,
+    HeartbeatRequest, RebuildQueueRequest,
 };
 
 pub struct Client {
@@ -57,22 +57,6 @@ impl Client {
         match self.connection.delete_queue(req).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!("Failed to delete queue: {}", err)),
-        }
-    }
-
-    pub async fn list_queues(&mut self) -> Result<Vec<String>, String> {
-        let req = tonic::Request::new(ListQueuesRequest {});
-        match self.connection.list_queues(req).await {
-            Ok(queues) => Ok(queues.get_ref().queues.clone()),
-            Err(err) => Err(format!("Failed to list channels: {}", err)),
-        }
-    }
-
-    pub async fn list_channels(&mut self) -> Result<Vec<String>, String> {
-        let req = tonic::Request::new(ListChannelsRequest {});
-        match self.connection.list_channels(req).await {
-            Ok(channels) => Ok(channels.get_ref().channels.clone()),
-            Err(err) => Err(format!("Failed to list channels: {}", err)),
         }
     }
 

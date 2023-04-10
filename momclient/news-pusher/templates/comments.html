@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Comments</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      h1 {
+        font-size: 36px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 85%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        margin: 0 auto;
+      }
+
+      th, td {
+        padding: 12px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #85929E;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 14px;
+        letter-spacing: 1px;
+        border: 2px solid #ddd;
+      }
+
+      tbody tr:nth-child(odd) {
+        background-color: #F8F8F8;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #F5F5F5;
+      }
+
+      tbody tr:hover {
+        background-color: #EEE;
+      }
+
+      td:first-child {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Comment List</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Content</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for message in messages %}
+        <tr>
+          <td>{{ message["id"] }}</td>
+          <td>{{ message["content"] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

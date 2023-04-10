@@ -13,6 +13,14 @@ set-py-venv:
 set-py-venv-with-deps: set-py-venv
 	${VENV_DIR}/bin/pip install -r requirements.txt
 
+.PHONY: run-news-pusher
+run-news-pusher:
+	${PYBIN} news-pusher news-pusher/config.json
+
+.PHONY: run-news-consumer
+run-news-consumer:
+	${PYBIN} news-consumer news-consumer/config.json
+
 .PHONY: build-proto
 build-proto:
 	rm -rf ${BUILD_DIR}/proto_grpc

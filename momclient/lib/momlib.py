@@ -1,5 +1,6 @@
 from collections import namedtuple
 import json
+import time
 import requests
 import asyncio
 
@@ -41,7 +42,10 @@ class MoMClient:
             data = response.json()
             print(f"Response body: {data}")
 
-            return (MoMInfo(data["host"], data["port"]), Channel(data["id"], data["topic"]))
+            return (
+                MoMInfo(data["host"], data["port"]),
+                Channel(data["id"], data["topic"]),
+            )
         except:
             return None
 
@@ -58,7 +62,10 @@ class MoMClient:
             data = response.json()
             print(f"Response body: {data}")
 
-            return (MoMInfo(data["host"], data["port"]), Channel(data["id"], data["topic"]))
+            return (
+                MoMInfo(data["host"], data["port"]),
+                Channel(data["id"], data["topic"]),
+            )
         except:
             return None
 
@@ -134,6 +141,7 @@ class Pusher:
     def __init__(self, mom_info):
         self._grpc_channel = grpc.insecure_channel(f"{mom_info.host}:{mom_info.port}")
         self._pusher = messages_pb2_grpc.MessageStreamStub(self._grpc_channel)
+        self._pusher.GetHeartbeat(messages_pb2.HeartbeatRequest())
 
     def push(self, content, queue_label, topic="__none__"):
         self._pusher.PushToQueue(
@@ -153,7 +161,7 @@ class Subscriber:
         self._mom_info = mom_info
         self._channel_id = channel.id
 
-    def consume(self):
+    def consume(self, on_message):
         async def run():
             async with grpc.aio.insecure_channel(
                 f"{self._mom_info.host}:{self._mom_info.port}"
@@ -167,7 +175,6 @@ class Subscriber:
                     res = await message_stream.read()
                     if res == grpc.aio.EOF:
                         break
-                    content = res.content.decode("utf-8")
-                    print(f"{(res.id, res.topic)}: {content}")
+                    on_message({"id": res.id, "content": res.content})
 
         asyncio.run(run())
