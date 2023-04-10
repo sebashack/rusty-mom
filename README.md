@@ -91,14 +91,14 @@ to those MoM servers with the least amount of queues. In turn, MoM servers will 
 TTL is still valid. This means that there is the chance that some messages that are broadcast through a channel are duplicates
 because of this recovery feature. However, each message has a unique id which allows the client to discriminate duplicates.
 
-Finally, it is worth noticing that it is possible for the manager itself to go down. This one of the single points of
+Finally, it is worth noticing that it is possible for the manager itself to go down. This is one of the single points of
 failure in our system. However, there are two facts that mitigate this issue, namely:
 
 - Once clients have established connection with a MoM server, they will no longer need the manager for pushing or consuming
   messages. That is why, if the manager goes down for a while, some clients might not even be affected by it.
 
 - If some MoM servers go down while the manager is down as well, MoM servers are implemented in such a way that if they
-  come back to activity before the manager is up, they will rebuild any queues they were previously hosting at boot time.
+  come back to activity before the manager is up, they will rebuild, at boot time, any queues they were previously hosting.
   This works because all queues in database have a record that points to the MoM server that hosts them. Thus if the manager
   has not updated that record, it means that it did not have the chance to reallocate it into a different MoM server.
 
@@ -229,7 +229,6 @@ script at the `docker` subdirectory:
 ```
 cd docker
 ./service up
-
 ```
 
 To run the database migrations, execute the [run.sh](https://github.com/sebashack/rusty-mom/blob/main/migrations/run.sh) at the
@@ -415,13 +414,13 @@ where the gRPC communication protocol has been defined. The remote call procedur
 - `CreateQueue`: Given a request with a `queue_label`, create a queue on some available MoM server. The `queue_label` must
                  be unique and it is case insensitive.
 - `CreateChannel`: Given a channel request with a `queue_label` and a topic, create a channel on the queue identified by
-                   `queue_label`. If the channel is not intended to have a topic, the special "__none__" reserved word can
+                   `queue_label`. If the channel is not intended to have a topic, the special `__none__` reserved word can
                    be used. Topics are case insensitive.
 - `DeleteChannel`: Given a `channel_id`remove the channel identified by it from the queue where it is hosted.
 - `DeleteQueue`: Given a `queue_label` remove the queue identified by it from the MoM where it is hosted. When a queue
                  is deleted, all of the messages attached to it are also removed both from the MoM server and database.
-- `PushToQueue`: Push a message with a topic to a specific queue hosted by a MoM server. If the topic is not intended to have a topic,
-                 the special "__none__" reserved word can be used. This operation is intended to be used by clients of
+- `PushToQueue`: Push a message with a topic to a specific queue hosted by a MoM server. If the message is not intended to have a topic,
+                 the special `__none__` reserved word can be used. This operation is intended to be used by clients of
                  this MoM system.
 - `SubscribeToChannel`: Subscribe a client to a permanent message stream coming from the channel identified by `channel_id`.
                         Note that this operation will block the consumer client as it will be constanly listening to a
@@ -445,7 +444,7 @@ The gRPC client interface is defined in [rmom-manager/src/client/endpoints.rs](h
 and it defines handlers for the operations `CreateQueue`, `DeleteQueue`, `RebuildQueue`, `CreateChannel`, `DeleteChannel`, and `GetHeartbeat`.
 This client is intended to address an specific MoM server the manager has been able to establish a connection with. Now,
 taking into account that multiple MoM servers are registered in order to increase fault tolerance and balance the load, the manager
-implementes keeps track of multiple connections at once via the [AvailableMoMs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/manager/mom.rs#L101)
+keeps track of multiple connections at once via the [AvailableMoMs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/manager/mom.rs#L101)
 data structure:
 
 ```
@@ -469,14 +468,14 @@ pub struct AvailableMoMs {
 ```
 
 `AvailableMoMs` is an immutable HashMap that stores a reference to gRPC clients that where registered in the `Rocket.toml`
-config file. Notice that the references to these clients are wrapped within a mutex in order to prevent race conditions and
+config file. Notice that the references to these clients are wrapped within a Mutex in order to prevent race conditions and
 synchronize their access.
 
 The REST API is defined at [rmom-manager/src/api/endpoints.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/api/endpoints.rs)
 and it defines the following routes:
 
 - `POST /queues/<queue_label>`: Given a unique queue `queue_label`, create a queue in some available MoM in `AvailableMoMs`. Notice
-                          that the available MoM will be chosen randomly. Thew new queue will be also registered in database
+                          that the available MoM will be chosen randomly. The new queue will be also registered in database
                           and associated to the MoM server.
 - `DELETE /queues/<queue_label>`: Given a `queue_label`, delete the queue identified by it from the host MoM server and from database.
 - `GET /queues/<queue_label>`: Given a `queue_label`, get the MoM server information necessary to push data to the queue identified by it, namely,
@@ -489,7 +488,7 @@ and it defines the following routes:
 - `DELETE /channels/<channel_id>`: Given a `channel_id`, delete the channel identified by it. Notice that it will be removed both
                                    from the MoM queue hosting and database.
 - `PUT /queues/<queue_label>/channels/<topic>`: Given a `queue_label` and a `topic`, create a channel on the queue identified by
-                                                `queue_label`. If the channel is not intended to have a topic, the special "__none__"
+                                                `queue_label`. If the channel is not intended to have a topic, the special `__none__`
                                                 reserved word must be used as a topic.
 
 The management task is implemented at [rmom-manager/src/manager/mod.rs](https://github.com/sebashack/rusty-mom/blob/main/rmom-manager/src/manager/mod.rs). Its
@@ -507,7 +506,7 @@ pub struct Manager {
 
 and implements the `run()` method which spawns a task that is constantly sending life probes to the MoMs registered in `AvailableMoMs`. If the
 life probe fails for a number of attempts, the manager assumes the MoM is not available, and for each of the queues that MoM server
-was hosting, the manager will pick the available MoM with the least amount of hosted queues, and will dispatch a RebuildQueue request to it.
+was hosting, the manager will pick out the available MoM with the least amount of hosted queues, and will dispatch a RebuildQueue request to it.
 If the available MoM could restore the queue successfully, the ownership of the queue will be updated in database. This management
 task runs periodically every `manager_cycle_secs` on a separate thread. The manager also implements the `restore_queues()`
 operation that does something similar to the `run()` task, but it is only intended to restore any queues when the manager is
@@ -532,7 +531,7 @@ pub struct Queue {
 ```
 
 One of the important methods for a `Queue` is `duplicate_channel` which, given an optional topic, returns a `ChannelReceiver` endpoint
-from which clients can get an stream of data:
+from which clients can get a data stream:
 
 ```
 pub struct ChannelReceiver {
@@ -564,18 +563,18 @@ pub struct StreamServer {
 
 It keeps track of the channels and queues in `channel_receivers` and `broadcast_ends`, respectively. Notice that for each
 `Queue` only one `BroadcastEnd` is stored and its access is synchronized by a Mutex. Access to `ChannelReceivers` is also
-synchronized via a Mutex. The `StreamServer` also has a DbPool from which database connections can be acquired. The database
-is used to backup messages and to retrieve messages when a `Queue` needs to be restored. Additionally, `StreamServer` implemented
+synchronized via a Mutex. The `StreamServer` also has a `DbPool` which database connections can be acquired from. The database
+is used to backup messages and to retrieve messages when a `Queue` needs to be restored. Additionally, `StreamServer` implements
 all of the RPC handlers specified in `messages.proto`, but we will only mention some of the outstanding methods here:
 
 - `async fn push_to_queue(&self, push: Request<Push>) -> Result<Response<PushOkResponse>, Status>`: Whenever a `Push` request
-  is received (`message Push { bytes content = 1; string topic = 2; string queue_label = 3; }`), this method will access the queue
-  identified by `queue_label` in `broadcast_ends`, and broadcast a `Message` (`message Message { string id = 1; bytes content = 2; string topic = 3; }`)
+  is received (`Push { bytes content = 1; string topic = 2; string queue_label = 3; }`), this method will access the queue
+  identified by `queue_label` in `broadcast_ends`, and broadcast a `Message` (`Message { string id = 1; bytes content = 2; string topic = 3; }`)
   on that queue. `Push` notifications are also stored in database with an expiration given by a TTL in order to enable
   queue restoring in case of failures.
 
 - `async fn subscribe_to_channel(&self, req: Request<SubscriptionRequest>,) -> Result<Response<Self::SubscribeToChannelStream>, Status>`: Whenever a
-  `SubscriptionRequest` is received (`message SubscriptionRequest { string channel_id = 1; }`), the `ChannelReceiver` identified with
+  `SubscriptionRequest` is received (`SubscriptionRequest { string channel_id = 1; }`), the `ChannelReceiver` identified with
   `channel_id` will be retrieved from `channel_receivers`. This `ChannelReceiver` is turned into a data stream and in case a topic
   was specified in the receiver, the messages that don't match it won't be delivered to the consumer. If there is no topic,
   all messages, regardless of the topic, will be delivered.
