@@ -34,7 +34,6 @@ async fn post_queue(
     }
 }
 
-// TODO: On deleting queues we also have messages
 #[delete("/queues/<label>")]
 async fn delete_queue(
     mut db: DbConnection,
