@@ -35,6 +35,7 @@ Our MoM implementation lacks the following features:
 - There is no support for users, authentication and authorization.
 - There is no encryption support for messages.
 
+
 ## 2) Architecture
 
 The following diagram shows a general view of our system:
@@ -63,7 +64,8 @@ This diagram depicts the 3 main layers of our system, namely:
 - *Storage layer*: On the one hand, a database (in gray) is used for administrative purposes, that is, the manager stores
   information about the available MoM servers and the queues and channels that have been created. On the other hand, the
   MoM servers use the database to store a backup of the messages that are pushed to queues. The messages stored in database
-  are used for restoring queues whenever a MoM server goes down.
+  are used for restoring queues whenever a MoM server goes down. Notice that a message is stored in database when received
+  by the MoM server via gRPC.
 
 
 The next diagram has a more detailed view of how queues and channels are organized in MoM servers:
