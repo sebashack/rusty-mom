@@ -39,7 +39,7 @@ Our MoM implementation lacks the following features:
 
 The following diagram shows a general view of our system:
 
-![general-arch](assets/general-arch.png)
+![general-arch](assets/general-arch-v2.png)
 
 
 This diagram depicts the 3 main layers of our system, namely:
